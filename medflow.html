@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedFlow — Saúde pública, simples assim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-mid: #9FE1CB;
+    --green-dark: #085041;
+    --teal: #0F6E56;
+    --text: #1a1a1a;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --bg: #ffffff;
+    --bg-soft: #f9fafb;
+    --bg-card: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+    --radius: 16px;
+    --radius-sm: 8px;
+    --shadow-soft: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-card: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 clamp(1.5rem, 5vw, 4rem);
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-text span {
+    color: var(--green);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 400;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .nav-cta {
+    background: var(--green) !important;
+    color: #fff !important;
+    padding: 8px 20px !important;
+    border-radius: 50px !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    transition: background 0.2s, transform 0.15s !important;
+  }
+
+  .nav-cta:hover {
+    background: var(--teal) !important;
+    transform: translateY(-1px);
+  }
+
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  
+  .hero {
+    padding: clamp(4rem, 10vw, 8rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 8vw, 6rem);
+    max-width: 1140px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-light);
+    color: var(--teal);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.2px;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    margin-bottom: 1.25rem;
+    color: var(--text);
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--green);
+  }
+
+  .hero-sub {
+    font-size: clamp(15px, 2vw, 17px);
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 480px;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green);
+    color: #fff;
+    text-decoration: none;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 15px;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(29,158,117,0.3);
+  }
+
+  .btn-primary:hover {
+    background: var(--teal);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(29,158,117,0.35);
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 15px;
+    transition: color 0.2s;
+  }
+
+  .btn-secondary:hover { color: var(--text); }
+
+  .btn-secondary svg { transition: transform 0.2s; }
+  .btn-secondary:hover svg { transform: translateX(3px); }
+
+  .hero-trust {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 2rem;
+  }
+
+  .avatars {
+    display: flex;
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: #fff;
+    margin-left: -8px;
+  }
+
+  .avatar:first-child { margin-left: 0; }
+
+  .trust-text {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .trust-text strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  
+  .hero-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .app-mockup {
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: 24px;
+    padding: 24px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: var(--shadow-card);
+    animation: floatCard 6s ease-in-out infinite;
+  }
+
+  @keyframes floatCard {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .mockup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .mockup-greeting {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .mockup-name {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+    margin-top: 2px;
+  }
+
+  .mockup-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--green-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--teal);
+  }
+
+  .mockup-next {
+    background: var(--green-light);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  .mockup-next-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+
+  .mockup-next-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--teal);
+    margin-bottom: 3px;
+  }
+
+  .mockup-next-info {
+    font-size: 13px;
+    color: var(--green);
+    opacity: 0.8;
+  }
+
+  .mockup-status-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .status-pill {
+    flex: 1;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+
+  .status-pill-val {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .status-pill-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .mockup-exam {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .exam-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green-mid);
+    flex-shrink: 0;
+  }
+
+  .exam-dot.pending { background: #fbbf24; }
+
+  .exam-text {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .exam-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 50px;
+    font-weight: 500;
+  }
+
+  .badge-ready {
+    background: var(--green-light);
+    color: var(--teal);
+  }
+
+  .badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  
+  .chip-float {
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: 50px;
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    box-shadow: var(--shadow-card);
+    white-space: nowrap;
+    animation: floatChip 5s ease-in-out infinite;
+  }
+
+  .chip-float.top-left {
+    align-self: flex-start;
+  }
+
+  .chip-float.bottom-right {
+    align-self: flex-end;
+    animation-delay: 0.8s;
+  }
+
+  @keyframes floatChip {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .chip-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  
+  .section {
+    padding: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem);
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--green);
+    margin-bottom: 0.75rem;
+  }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.3px;
+  }
+
+  .section-sub {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 500px;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .step-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    position: relative;
+    transition: box-shadow 0.25s, transform 0.25s;
+  }
+
+  .step-card:hover {
+    box-shadow: var(--shadow-card);
+    transform: translateY(-4px);
+  }
+
+  .step-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3rem;
+    color: var(--green-light);
+    line-height: 1;
+    margin-bottom: 0.75rem;
+  }
+
+  .step-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--green-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .step-title {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .step-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+
+  
+  .features-bg {
+    background: var(--bg-soft);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-top: 3rem;
+  }
+
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: box-shadow 0.25s, transform 0.25s;
+  }
+
+  .feature-card:hover {
+    box-shadow: var(--shadow-card);
+    transform: translateY(-3px);
+  }
+
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .feature-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+
+  
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-top: 3rem;
+  }
+
+  .testimonial-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+
+  .testimonial-stars {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 1rem;
+  }
+
+  .star {
+    width: 14px;
+    height: 14px;
+    fill: #fbbf24;
+  }
+
+  .testimonial-text {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.65;
+    margin-bottom: 1.25rem;
+    font-style: italic;
+    font-family: 'DM Serif Display', serif;
+    font-weight: 400;
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .author-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .author-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .author-role {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  
+  .stats-section {
+    background: var(--green);
+    color: #fff;
+    padding: clamp(3rem, 8vw, 5rem) clamp(1.5rem, 5vw, 4rem);
+  }
+
+  .stats-inner {
+    max-width: 1140px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
+  }
+
+  .stats-text h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    margin-bottom: 1rem;
+    line-height: 1.15;
+    color: #fff;
+  }
+
+  .stats-text p {
+    font-size: 16px;
+    opacity: 0.8;
+    line-height: 1.7;
+    max-width: 420px;
+    font-weight: 300;
+    color: #fff;
+  }
+
+  .stats-numbers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .stat-box {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    opacity: 0.75;
+    color: #fff;
+  }
+
+  
+  .cta-section {
+    padding: clamp(4rem, 10vw, 7rem) clamp(1.5rem, 5vw, 4rem);
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .cta-section h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.15;
+    margin-bottom: 1rem;
+    letter-spacing: -0.3px;
+  }
+
+  .cta-section p {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .cta-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--text);
+    text-decoration: none;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 15px;
+    border: 1.5px solid var(--border-strong);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-light);
+  }
+
+  
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2.5rem clamp(1.5rem, 5vw, 4rem);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+  }
+
+  .footer-links a {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--text); }
+
+  .footer-copy {
+    font-size: 13px;
+    color: var(--text-light);
+  }
+
+  
+  .section-divider {
+    width: 48px;
+    height: 3px;
+    background: var(--green);
+    border-radius: 2px;
+    margin: 1rem 0 2rem;
+  }
+
+  
+  .fade-in {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+
+    .nav-links.open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 64px;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem 1.5rem;
+      gap: 1.25rem;
+    }
+
+    .hero {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+
+    .hero-sub { margin: 0 auto 2rem; }
+    .hero-actions { justify-content: center; }
+    .hero-trust { justify-content: center; }
+
+    .hero-visual { margin-top: 1rem; }
+    .chip-float { display: none; }
+
+    .stats-inner { grid-template-columns: 1fr; }
+
+    footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.25rem;
+    }
+
+    .footer-links { flex-wrap: wrap; }
+  }
+
+  @media (max-width: 480px) {
+    .app-mockup { max-width: 100%; }
+    .stats-numbers { grid-template-columns: 1fr; }
+    .mockup-status-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+
+<nav>
+  <a href="#" class="logo">
+    <svg class="logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      
+      <rect width="36" height="36" rx="10" fill="#1D9E75"/>
+      
+      <path d="M6 18 L10 18 L12 12 L15 24 L18 8 L21 22 L24 16 L26 18 L30 18" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <span class="logo-text">Med<span>Flow</span></span>
+  </a>
+
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#como-funciona">Como funciona</a></li>
+    <li><a href="#funcionalidades">Funcionalidades</a></li>
+    <li><a href="#depoimentos">Depoimentos</a></li>
+    <li><a href="#acessar" class="nav-cta">Acessar agora</a></li>
+  </ul>
+
+  <button class="hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+</nav>
+
+
+<section>
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">Sistema de Saúde Pública Digital</div>
+      <h1>Sua saúde,<br><em>acompanhe</em><br>de onde estiver</h1>
+      <p class="hero-sub">Consultas, exames e resultados do sistema público de saúde em um só lugar. Simples, claro e sempre disponível.</p>
+      <div class="hero-actions">
+        <a href="#acessar" class="btn-primary">
+          Começar agora
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#como-funciona" class="btn-secondary">
+          Saiba mais
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      <div class="hero-trust">
+        <div class="avatars">
+          <div class="avatar" style="background:#1D9E75;">MR</div>
+          <div class="avatar" style="background:#0F6E56;">JS</div>
+          <div class="avatar" style="background:#085041;">AL</div>
+          <div class="avatar" style="background:#9FE1CB; color:#085041;">CP</div>
+        </div>
+        <p class="trust-text"><strong>+12.000 pacientes</strong> já usam o MedFlow</p>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      
+      <div class="chip-float top-left">
+        <div class="chip-icon" style="background:#E1F5EE;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3v10M3 8h10" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        Consulta marcada!
+      </div>
+
+      <div class="chip-float bottom-right">
+        <div class="chip-icon" style="background:#E1F5EE;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <path d="M13 5L6.5 11.5L3 8" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        Resultado disponível
+      </div>
+
+      
+      <div class="app-mockup">
+        <div class="mockup-header">
+          <div>
+            <div class="mockup-greeting">Bom dia,</div>
+            <div class="mockup-name">Maria Silva 👋</div>
+          </div>
+          <div class="mockup-avatar">MS</div>
+        </div>
+
+        <div class="mockup-next">
+          <div class="mockup-next-label">Próxima consulta</div>
+          <div class="mockup-next-title">Clínica Geral — Dr. Rocha</div>
+          <div class="mockup-next-info">Quinta, 16 jan · 09h30 · UBS Vila Nova</div>
+        </div>
+
+        <div class="mockup-status-row">
+          <div class="status-pill">
+            <div class="status-pill-val">3</div>
+            <div class="status-pill-label">Consultas</div>
+          </div>
+          <div class="status-pill">
+            <div class="status-pill-val">2</div>
+            <div class="status-pill-label">Exames</div>
+          </div>
+          <div class="status-pill">
+            <div class="status-pill-val">1</div>
+            <div class="status-pill-label">Resultado</div>
+          </div>
+        </div>
+
+        <div class="mockup-exam">
+          <div class="exam-dot"></div>
+          <div class="exam-text">Hemograma completo</div>
+          <span class="exam-badge badge-ready">Pronto</span>
+        </div>
+        <div class="mockup-exam">
+          <div class="exam-dot pending"></div>
+          <div class="exam-text">Raio-X tórax</div>
+          <span class="exam-badge badge-pending">Em análise</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="como-funciona" class="section">
+  <div class="section-label">Como funciona</div>
+  <h2 class="section-title">Simples do início<br>ao fim</h2>
+  <div class="section-divider"></div>
+  <p class="section-sub">Três passos e você já está conectado com o sistema de saúde pública.</p>
+
+  <div class="steps-grid">
+    <div class="step-card fade-in">
+      <div class="step-num">01</div>
+      <div class="step-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="7" r="4" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="step-title">Crie sua conta</div>
+      <div class="step-desc">Cadastre com CPF e cartão do SUS. Em menos de 2 minutos você já acessa todos os seus dados de saúde.</div>
+    </div>
+
+    <div class="step-card fade-in">
+      <div class="step-num">02</div>
+      <div class="step-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="4" width="18" height="18" rx="2" stroke="#1D9E75" stroke-width="1.8"/>
+          <path d="M16 2v4M8 2v4M3 10h18" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="step-title">Marque sua consulta</div>
+      <div class="step-desc">Veja os horários disponíveis na unidade mais próxima e escolha o melhor dia para você, sem sair de casa.</div>
+    </div>
+
+    <div class="step-card fade-in">
+      <div class="step-num">03</div>
+      <div class="step-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M9 12l2 2 4-4" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#1D9E75" stroke-width="1.8"/>
+        </svg>
+      </div>
+      <div class="step-title">Acompanhe tudo</div>
+      <div class="step-desc">Resultados de exames, histórico de consultas e próximos agendamentos sempre no seu celular ou computador.</div>
+    </div>
+  </div>
+</section>
+
+
+<section id="funcionalidades" class="features-bg">
+  <div class="section" style="max-width:1140px; margin:0 auto;">
+    <div class="section-label">Funcionalidades</div>
+    <h2 class="section-title">Tudo que você precisa,<br>sem complicação</h2>
+    <div class="section-divider"></div>
+
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:#E1F5EE;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="18" rx="2" stroke="#1D9E75" stroke-width="1.8"/>
+            <path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="feature-title">Agendamento online</div>
+        <div class="feature-desc">Marque consultas e exames nas unidades de saúde pública mais próximas sem precisar ir pessoalmente ou ligar.</div>
+      </div>
+
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:#E1F5EE;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#1D9E75" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="feature-title">Resultados de exames</div>
+        <div class="feature-desc">Acesse laudos e resultados assim que ficarem prontos, sem precisar ir ao posto buscar um papel.</div>
+      </div>
+
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:#E1F5EE;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="feature-title">Acompanhamento da consulta</div>
+        <div class="feature-desc">Veja em tempo real onde está sua consulta: confirmada, em andamento, concluída ou cancelada.</div>
+      </div>
+
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:#E1F5EE;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="feature-title">Histórico médico</div>
+        <div class="feature-desc">Todo o seu histórico de consultas e exames em um só lugar, organizado por data e especialidade.</div>
+      </div>
+
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:#E1F5EE;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 20V10M12 20V4M6 20v-6" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="feature-title">Lembretes inteligentes</div>
+        <div class="feature-desc">Receba notificações de consultas, exames e quando seus resultados ficarem disponíveis.</div>
+      </div>
+
+      <div class="feature-card fade-in">
+        <div class="feature-icon" style="background:#E1F5EE;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="#1D9E75" stroke-width="1.8"/>
+            <circle cx="12" cy="10" r="3" stroke="#1D9E75" stroke-width="1.8"/>
+          </svg>
+        </div>
+        <div class="feature-title">Unidades próximas</div>
+        <div class="feature-desc">Encontre a UBS, UPA ou hospital do SUS mais perto de você com informações de horário e serviços.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="depoimentos" class="section">
+  <div class="section-label">Depoimentos</div>
+  <h2 class="section-title">O que dizem<br>nossos usuários</h2>
+  <div class="section-divider"></div>
+
+  <div class="testimonials-grid">
+    <div class="testimonial-card fade-in">
+      <div class="testimonial-stars">
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="testimonial-text">"Antes eu perdia o dia inteiro no posto esperando. Agora marco pelo celular e chego só na hora certa."</div>
+      <div class="testimonial-author">
+        <div class="author-avatar" style="background:#1D9E75;">MR</div>
+        <div>
+          <div class="author-name">Maria Rodrigues</div>
+          <div class="author-role">Dona de casa, 58 anos · Recife, PE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial-card fade-in">
+      <div class="testimonial-stars">
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="testimonial-text">"Vi o resultado do meu exame de sangue pelo celular, sem precisar sair de casa. Meu filho ficou impressionado também."</div>
+      <div class="testimonial-author">
+        <div class="author-avatar" style="background:#085041;">JS</div>
+        <div>
+          <div class="author-name">João Santos</div>
+          <div class="author-role">Aposentado, 71 anos · Fortaleza, CE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial-card fade-in">
+      <div class="testimonial-stars">
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="testimonial-text">"Interface muito fácil. Mesmo sem saber muito de tecnologia, consegui me cadastrar e marcar uma consulta sozinha."</div>
+      <div class="testimonial-author">
+        <div class="author-avatar" style="background:#0F6E56;">AL</div>
+        <div>
+          <div class="author-name">Ana Lima</div>
+          <div class="author-role">Vendedora, 44 anos · Salvador, BA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="stats-section">
+  <div class="stats-inner">
+    <div class="stats-text">
+      <h2>Conectando pessoas ao cuidado que merecem</h2>
+      <p>O MedFlow nasceu da necessidade real de tornar o sistema de saúde pública mais acessível para todos os brasileiros, independente de onde moram ou quanto sabem de tecnologia.</p>
+    </div>
+    <div class="stats-numbers">
+      <div class="stat-box">
+        <div class="stat-num">12k+</div>
+        <div class="stat-label">Pacientes ativos</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">48k</div>
+        <div class="stat-label">Consultas agendadas</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">98%</div>
+        <div class="stat-label">Satisfação dos usuários</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">5 min</div>
+        <div class="stat-label">Tempo médio de cadastro</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="acessar" class="cta-section">
+  <div class="section-label" style="display:inline-block;">Comece agora</div>
+  <h2>Sua saúde não<br>pode esperar</h2>
+  <p>Junte-se a milhares de brasileiros que já acompanham sua saúde pelo MedFlow. Gratuito, simples e integrado ao SUS.</p>
+  <div class="cta-actions">
+    <a href="#" class="btn-primary">
+      Criar conta gratuita
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    <a href="#" class="btn-outline">Já tenho conta</a>
+  </div>
+</section>
+
+
+<div style="border-top:1px solid var(--border);">
+  <footer>
+    <a href="#" class="footer-logo">
+      <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="10" fill="#1D9E75"/>
+        <path d="M6 18 L10 18 L12 12 L15 24 L18 8 L21 22 L24 16 L26 18 L30 18" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span style="font-family:'DM Serif Display',serif; font-size:18px; color:var(--text);">Med<span style="color:var(--green);">Flow</span></span>
+    </a>
+
+    <ul class="footer-links">
+      <li><a href="#">Sobre</a></li>
+      <li><a href="#">Privacidade</a></li>
+      <li><a href="#">Termos de uso</a></li>
+      <li><a href="#">Acessibilidade</a></li>
+      <li><a href="#">Contato</a></li>
+    </ul>
+
+    <span class="footer-copy">© 2026 MedFlow. Todos os direitos reservados.</span>
+  </footer>
+</div>
+
+<script>
+  function toggleMenu() {
+    const nav = document.getElementById('navLinks');
+    nav.classList.toggle('open');
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(sec => {
+      if (window.scrollY >= sec.offsetTop - 100) current = sec.id;
+    });
+    navLinks.forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current ? '#1D9E75' : '';
+    });
+  });
+</script>
+</body>
+</html>
