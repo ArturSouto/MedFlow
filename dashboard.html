@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedFlow — Painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-mid: #9FE1CB;
+    --teal: #0F6E56;
+    --green-dark: #085041;
+    --text: #1a1a1a;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --bg: #f9fafb;
+    --bg-card: #ffffff;
+    --border: rgba(0,0,0,0.07);
+    --border-strong: rgba(0,0,0,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04);
+    --sidebar-w: 240px;
+    --yellow: #fbbf24;
+    --yellow-light: #fef9e7;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --blue: #3b82f6;
+    --blue-light: #eff6ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    transition: transform 0.3s;
+  }
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+  }
+
+  .logo-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+  }
+
+  .logo-text span { color: var(--green); }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 12px 10px;
+    overflow-y: auto;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-light);
+    padding: 8px 10px 4px;
+    margin-top: 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 400;
+    transition: background 0.15s, color 0.15s;
+    margin-bottom: 2px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+
+  .nav-item:hover {
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .nav-item.active {
+    background: var(--green-light);
+    color: var(--teal);
+    font-weight: 500;
+  }
+
+  .nav-item.active svg { stroke: var(--teal); }
+
+  .nav-item svg {
+    flex-shrink: 0;
+    stroke: currentColor;
+  }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--green);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 50px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .sidebar-user {
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--green-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--teal);
+    flex-shrink: 0;
+  }
+
+  .user-info { flex: 1; min-width: 0; }
+
+  .user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-tag {
+    font-size: 11px;
+    color: var(--text-light);
+  }
+
+  .logout-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-light);
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .logout-btn:hover { color: var(--red); background: var(--red-light); }
+
+  /* MAIN */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text);
+    padding: 4px;
+  }
+
+  .topbar-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .notif-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: none;
+    border: 1px solid var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s;
+    color: var(--text-muted);
+  }
+
+  .notif-btn:hover { background: var(--bg); }
+
+  .notif-dot {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 7px;
+    height: 7px;
+    background: var(--red);
+    border-radius: 50%;
+    border: 1.5px solid var(--bg-card);
+  }
+
+  .topbar-date {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* PAGE CONTENT */
+  .page {
+    padding: 28px;
+    flex: 1;
+  }
+
+  .page-header {
+    margin-bottom: 24px;
+  }
+
+  .greeting {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .greeting-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+  }
+
+  .stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .stat-body { flex: 1; }
+
+  .stat-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .stat-change {
+    font-size: 11px;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .stat-change.up { color: var(--green); }
+  .stat-change.neutral { color: var(--text-light); }
+
+  /* GRID 2 COLS */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .grid-3-1 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .card-action {
+    font-size: 13px;
+    color: var(--green);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .card-action:hover { color: var(--teal); }
+
+  .card-body { padding: 16px 20px; }
+
+  /* PRÓXIMA CONSULTA */
+  .next-appt {
+    background: linear-gradient(135deg, var(--green) 0%, var(--teal) 100%);
+    border-radius: var(--radius);
+    padding: 22px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(29,158,117,0.3);
+    margin-bottom: 20px;
+  }
+
+  .next-appt::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+  }
+
+  .next-appt::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    right: 40px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .next-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.75;
+    margin-bottom: 10px;
+  }
+
+  .next-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.35rem;
+    margin-bottom: 4px;
+  }
+
+  .next-info {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .next-info-sep { opacity: 0.4; }
+
+  .next-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .next-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    border: none;
+  }
+
+  .next-btn.primary {
+    background: #fff;
+    color: var(--teal);
+  }
+
+  .next-btn.primary:hover { background: #f0fdf9; }
+
+  .next-btn.ghost {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  .next-btn.ghost:hover { background: rgba(255,255,255,0.22); }
+
+  .countdown {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    text-align: right;
+    z-index: 1;
+  }
+
+  .countdown-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .countdown-label {
+    font-size: 11px;
+    opacity: 0.65;
+    color: #fff;
+  }
+
+  /* CONSULTA LIST */
+  .appt-list { padding: 0 20px; }
+
+  .appt-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .appt-item:last-child { border-bottom: none; }
+
+  .appt-date {
+    text-align: center;
+    min-width: 40px;
+  }
+
+  .appt-day {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .appt-month {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .appt-divider {
+    width: 1px;
+    height: 36px;
+    background: var(--border-strong);
+    flex-shrink: 0;
+  }
+
+  .appt-info { flex: 1; min-width: 0; }
+
+  .appt-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .appt-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 50px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .badge-confirmed  { background: var(--green-light); color: var(--teal); }
+  .badge-pending    { background: var(--yellow-light); color: #92400e; }
+  .badge-cancelled  { background: var(--red-light); color: var(--red); }
+  .badge-done       { background: #f3f4f6; color: var(--text-muted); }
+  .badge-ongoing    { background: var(--blue-light); color: var(--blue); }
+
+  /* EXAMES LIST */
+  .exam-list { padding: 0 20px; }
+
+  .exam-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .exam-item:last-child { border-bottom: none; }
+
+  .exam-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-ready    { background: var(--green); }
+  .dot-analysis { background: var(--yellow); }
+  .dot-pending  { background: var(--text-light); }
+
+  .exam-info { flex: 1; min-width: 0; }
+
+  .exam-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .exam-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  .exam-action {
+    font-size: 12px;
+    color: var(--green);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .exam-action:hover { color: var(--teal); }
+  .exam-action.disabled { color: var(--text-light); pointer-events: none; }
+
+  /* ATIVIDADE / TIMELINE */
+  .timeline { padding: 4px 20px 8px; }
+
+  .timeline-item {
+    display: flex;
+    gap: 14px;
+    padding: 10px 0;
+    position: relative;
+  }
+
+  .timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 32px;
+    bottom: -10px;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .timeline-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .timeline-body { flex: 1; }
+
+  .timeline-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.45;
+  }
+
+  .timeline-time {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  /* QUICK ACTIONS */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 16px 20px;
+  }
+
+  .quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 10px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    background: none;
+  }
+
+  .quick-btn:hover {
+    border-color: var(--green);
+    background: var(--green-light);
+    transform: translateY(-2px);
+  }
+
+  .quick-btn:hover .quick-icon { background: var(--green); }
+  .quick-btn:hover .quick-icon svg { stroke: #fff; }
+
+  .quick-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .quick-icon svg { stroke: var(--green); }
+
+  .quick-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap { margin-bottom: 10px; }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .progress-label { color: var(--text-muted); }
+  .progress-val { font-weight: 500; color: var(--text); }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--green);
+    transition: width 0.8s ease;
+  }
+
+  /* OVERLAY */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 45;
+  }
+
+  .overlay.visible { display: block; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .grid-3-1 { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 860px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 700px) {
+    .sidebar {
+      transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .main { margin-left: 0; }
+    .menu-toggle { display: flex; }
+    .topbar-date { display: none; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .page { padding: 16px; }
+    .countdown { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .quick-actions { grid-template-columns: repeat(4, 1fr); }
+    .quick-label { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <a href="medflow.html" class="sidebar-logo">
+    <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="10" fill="#1D9E75"/>
+      <path d="M6 18 L10 18 L12 12 L15 24 L18 8 L21 22 L24 16 L26 18 L30 18" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <span class="logo-text">Med<span>Flow</span></span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="setPage('dashboard')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      Painel
+    </button>
+
+    <button class="nav-item" onclick="setPage('consultas')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
+      Consultas
+      <span class="nav-badge">3</span>
+    </button>
+
+    <button class="nav-item" onclick="setPage('exames')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+      </svg>
+      Exames
+    </button>
+
+    <button class="nav-item" onclick="setPage('resultados')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      </svg>
+      Resultados
+      <span class="nav-badge">1</span>
+    </button>
+
+    <div class="nav-section-label">Conta</div>
+
+    <button class="nav-item" onclick="setPage('perfil')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      Perfil
+    </button>
+
+    <button class="nav-item" onclick="setPage('ajuda')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+      </svg>
+      Ajuda
+    </button>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">MS</div>
+    <div class="user-info">
+      <div class="user-name">Maria Silva</div>
+      <div class="user-tag">Paciente · SUS</div>
+    </div>
+    <button class="logout-btn" onclick="location.href='medflow.html'" title="Sair">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+      </svg>
+    </button>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <span class="topbar-title" id="topbarTitle">Painel</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-date" id="topbarDate"></span>
+      <button class="notif-btn" title="Notificações">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notif-dot"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="page" id="pageContent">
+
+    <div class="page-header">
+      <h1 class="greeting">Bom dia, Maria 👋</h1>
+      <p class="greeting-sub">Aqui está um resumo da sua saúde hoje.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#E1F5EE;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-val">3</div>
+          <div class="stat-label">Consultas agendadas</div>
+          <div class="stat-change up">+1 este mês</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#eff6ff;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-val">2</div>
+          <div class="stat-label">Exames pendentes</div>
+          <div class="stat-change neutral">Sem mudanças</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fef9e7;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-val">1</div>
+          <div class="stat-label">Resultado disponível</div>
+          <div class="stat-change up" style="color:#f59e0b;">Novo!</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#f3f4f6;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-val">12</div>
+          <div class="stat-label">Consultas realizadas</div>
+          <div class="stat-change neutral">Histórico total</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="next-appt">
+      <div class="countdown">
+        <div class="countdown-val" id="daysCount">3</div>
+        <div class="countdown-label">dias</div>
+      </div>
+      <div class="next-label">Próxima consulta</div>
+      <div class="next-title">Clínica Geral — Dr. Rocha</div>
+      <div class="next-info">
+        <span>Quinta, 18 mai</span>
+        <span class="next-info-sep">·</span>
+        <span>09h30</span>
+        <span class="next-info-sep">·</span>
+        <span>UBS Vila Nova</span>
+      </div>
+      <div class="next-actions">
+        <button class="next-btn primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 6s4-2 11-2 11 2 11 2M1 6v14s4 2 11 2 11-2 11-2V6"/>
+          </svg>
+          Ver detalhes
+        </button>
+        <button class="next-btn ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          Lembrar-me
+        </button>
+        <button class="next-btn ghost">Cancelar</button>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Consultas recentes</span>
+          <button class="card-action" onclick="setPage('consultas')">Ver todas</button>
+        </div>
+        <div class="appt-list">
+          <div class="appt-item">
+            <div class="appt-date">
+              <div class="appt-day">18</div>
+              <div class="appt-month">mai</div>
+            </div>
+            <div class="appt-divider"></div>
+            <div class="appt-info">
+              <div class="appt-name">Clínica Geral — Dr. Rocha</div>
+              <div class="appt-sub">09h30 · UBS Vila Nova</div>
+            </div>
+            <span class="status-badge badge-confirmed">Confirmada</span>
+          </div>
+
+          <div class="appt-item">
+            <div class="appt-date">
+              <div class="appt-day">02</div>
+              <div class="appt-month">jun</div>
+            </div>
+            <div class="appt-divider"></div>
+            <div class="appt-info">
+              <div class="appt-name">Cardiologia — Dra. Santos</div>
+              <div class="appt-sub">14h00 · Hospital Municipal</div>
+            </div>
+            <span class="status-badge badge-pending">Aguardando</span>
+          </div>
+
+          <div class="appt-item">
+            <div class="appt-date">
+              <div class="appt-day">28</div>
+              <div class="appt-month">abr</div>
+            </div>
+            <div class="appt-divider"></div>
+            <div class="appt-info">
+              <div class="appt-name">Clínica Geral — Dr. Rocha</div>
+              <div class="appt-sub">10h00 · UBS Vila Nova</div>
+            </div>
+            <span class="status-badge badge-done">Concluída</span>
+          </div>
+
+          <div class="appt-item">
+            <div class="appt-date">
+              <div class="appt-day">10</div>
+              <div class="appt-month">mar</div>
+            </div>
+            <div class="appt-divider"></div>
+            <div class="appt-info">
+              <div class="appt-name">Dermatologia — Dr. Lima</div>
+              <div class="appt-sub">08h30 · UPA Central</div>
+            </div>
+            <span class="status-badge badge-cancelled">Cancelada</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Meus exames</span>
+          <button class="card-action" onclick="setPage('exames')">Ver todos</button>
+        </div>
+        <div class="exam-list">
+          <div class="exam-item">
+            <div class="exam-dot dot-ready"></div>
+            <div class="exam-info">
+              <div class="exam-name">Hemograma completo</div>
+              <div class="exam-date">Resultado: 12 mai 2026</div>
+            </div>
+            <a href="#" class="exam-action">Ver resultado</a>
+          </div>
+
+          <div class="exam-item">
+            <div class="exam-dot dot-analysis"></div>
+            <div class="exam-info">
+              <div class="exam-name">Raio-X tórax</div>
+              <div class="exam-date">Coletado: 10 mai 2026</div>
+            </div>
+            <span class="exam-action disabled">Em análise</span>
+          </div>
+
+          <div class="exam-item">
+            <div class="exam-dot dot-pending"></div>
+            <div class="exam-info">
+              <div class="exam-name">Glicemia em jejum</div>
+              <div class="exam-date">Agendado: 25 mai 2026</div>
+            </div>
+            <span class="exam-action disabled">Aguardando</span>
+          </div>
+
+          <div class="exam-item">
+            <div class="exam-dot dot-ready"></div>
+            <div class="exam-info">
+              <div class="exam-name">Colesterol total</div>
+              <div class="exam-date">Resultado: 02 abr 2026</div>
+            </div>
+            <a href="#" class="exam-action">Ver resultado</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Ações rápidas</span>
+        </div>
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="setPage('consultas')">
+            <div class="quick-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"/>
+              </svg>
+            </div>
+            <span class="quick-label">Agendar consulta</span>
+          </button>
+
+          <button class="quick-btn" onclick="setPage('exames')">
+            <div class="quick-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15h6"/>
+              </svg>
+            </div>
+            <span class="quick-label">Agendar exame</span>
+          </button>
+
+          <button class="quick-btn" onclick="setPage('resultados')">
+            <div class="quick-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <span class="quick-label">Ver resultados</span>
+          </button>
+
+          <button class="quick-btn" onclick="setPage('perfil')">
+            <div class="quick-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <span class="quick-label">Meu perfil</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Atividade recente</span>
+        </div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-icon" style="background:#E1F5EE;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 12l2 2 4-4"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </div>
+            <div class="timeline-body">
+              <div class="timeline-text">Resultado do hemograma disponível</div>
+              <div class="timeline-time">Hoje, 08h12</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-icon" style="background:#eff6ff;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+              </svg>
+            </div>
+            <div class="timeline-body">
+              <div class="timeline-text">Consulta com Dr. Rocha confirmada para 18/mai</div>
+              <div class="timeline-time">Ontem, 14h30</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-icon" style="background:#fef9e7;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              </svg>
+            </div>
+            <div class="timeline-body">
+              <div class="timeline-text">Raio-X tórax em análise no laboratório</div>
+              <div class="timeline-time">10 mai, 11h00</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-icon" style="background:#f3f4f6;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 12l2 2 4-4"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </div>
+            <div class="timeline-body">
+              <div class="timeline-text">Consulta com Dr. Rocha concluída</div>
+              <div class="timeline-time">28 abr, 10h45</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function setDate() {
+    const now = new Date()
+    const opts = { weekday: 'long', day: 'numeric', month: 'long' }
+    const str = now.toLocaleDateString('pt-BR', opts)
+    document.getElementById('topbarDate').textContent = str.charAt(0).toUpperCase() + str.slice(1)
+  }
+
+  function setGreeting() {
+    const h = new Date().getHours()
+    const g = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
+    document.querySelector('.greeting').textContent = g + ', Maria 👋'
+  }
+
+  function setPage(page) {
+    const titles = {
+      dashboard: 'Painel',
+      consultas: 'Consultas',
+      exames: 'Exames',
+      resultados: 'Resultados',
+      perfil: 'Perfil',
+      ajuda: 'Ajuda',
+    }
+
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'))
+    const btns = document.querySelectorAll('.nav-item')
+    btns.forEach(b => {
+      if (b.getAttribute('onclick')?.includes(page)) b.classList.add('active')
+    })
+
+    document.getElementById('topbarTitle').textContent = titles[page] || page
+    closeSidebar()
+  }
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar')
+    const overlay = document.getElementById('overlay')
+    sidebar.classList.toggle('open')
+    overlay.classList.toggle('visible')
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open')
+    document.getElementById('overlay').classList.remove('visible')
+  }
+
+  setDate()
+  setGreeting()
+
+  const apptDate = new Date('2026-05-18')
+  const today = new Date()
+  const diff = Math.ceil((apptDate - today) / (1000 * 60 * 60 * 24))
+  if (diff >= 0) document.getElementById('daysCount').textContent = diff
+</script>
+</body>
+</html>
