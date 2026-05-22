@@ -5,6 +5,8 @@ import { authRoutes } from './routes/auth.routes'
 import { consultaRoutes } from './routes/consulta.routes'
 import { exameRoutes } from './routes/exame.routes'
 import { usuarioRoutes } from './routes/usuario.routes'
+import { profissionalRoutes } from './routes/profissional.routes'
+import { prontuarioRoutes } from './routes/prontuario.routes'
 import { errorHandler } from './middlewares/errorHandler'
 
 const app = express()
@@ -21,10 +23,12 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', app: 'MedFlow API', timestamp: new Date().toISOString() })
 })
 
-app.use('/auth',      authRoutes)
-app.use('/usuarios',  usuarioRoutes)
-app.use('/consultas', consultaRoutes)
-app.use('/exames',    exameRoutes)
+app.use('/auth',           authRoutes)
+app.use('/usuarios',       usuarioRoutes)
+app.use('/consultas',      consultaRoutes)
+app.use('/exames',         exameRoutes)
+app.use('/auth/profissional', profissionalRoutes)
+app.use('/prontuarios',    prontuarioRoutes)
 
 app.use(errorHandler)
 
