@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedFlow — Meu Painel</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1D9E75; --green-light: #E1F5EE; --green-mid: #9FE1CB; --teal: #0F6E56; --green-dark: #085041;
+    --blue: #1E40AF; --blue-light: #EFF6FF; --blue-mid: #93C5FD; --blue-dark: #1e3a8a;
+    --yellow: #fbbf24; --yellow-light: #fef9e7;
+    --red: #ef4444; --red-light: #fef2f2;
+    --text: #1a1a1a; --text-muted: #6b7280; --text-light: #9ca3af;
+    --bg: #f9fafb; --bg-card: #ffffff;
+    --border: rgba(0,0,0,0.07); --border-strong: rgba(0,0,0,0.12);
+    --radius: 16px; --radius-sm: 10px;
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04);
+    --sidebar-w: 240px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { width: var(--sidebar-w); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 20px 16px; border-bottom: 1px solid var(--border); text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); }
+  .logo-text span { color: var(--green); }
+  .sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+  .nav-section-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); padding: 8px 10px 4px; margin-top: 8px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 400; transition: background .15s, color .15s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--green-light); color: var(--teal); font-weight: 500; }
+  .nav-item.active svg { stroke: var(--teal); }
+  .nav-item svg { flex-shrink: 0; stroke: currentColor; }
+  .nav-badge { margin-left: auto; background: var(--green); color: #fff; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 50px; min-width: 18px; text-align: center; }
+  .sidebar-user { border-top: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 36px; height: 36px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--teal); flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--text-muted); }
+  .btn-logout { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 6px; transition: color .2s, background .2s; }
+  .btn-logout:hover { color: var(--red); background: var(--red-light); }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+  .topbar-title { font-size: 16px; font-weight: 500; color: var(--text); }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-agendar { display: inline-flex; align-items: center; gap: 7px; background: var(--green); color: #fff; border: none; padding: 9px 18px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .2s, transform .15s; text-decoration: none; }
+  .btn-agendar:hover { background: var(--teal); transform: translateY(-1px); }
+  .content { padding: 28px; flex: 1; }
+
+  /* PAGE SECTIONS */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-card); }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 14px; border-bottom: 1px solid var(--border); }
+  .card-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .card-body { padding: 20px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 8px; }
+  .stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .stat-icon.green { background: var(--green-light); }
+  .stat-icon.blue  { background: var(--blue-light); }
+  .stat-icon.yellow{ background: var(--yellow-light); }
+  .stat-icon.red   { background: var(--red-light); }
+  .stat-value { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--text-muted); }
+
+  /* DASHBOARD GRID */
+  .dash-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
+
+  /* CONSULTA ITEM */
+  .consulta-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+  .consulta-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .consulta-date { background: var(--green-light); color: var(--teal); border-radius: 10px; padding: 8px 12px; text-align: center; min-width: 52px; flex-shrink: 0; }
+  .consulta-date .day { font-size: 20px; font-weight: 700; line-height: 1; }
+  .consulta-date .mon { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .consulta-info { flex: 1; }
+  .consulta-medico { font-size: 14px; font-weight: 500; color: var(--text); }
+  .consulta-esp { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .consulta-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .consulta-hora { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .consulta-local { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+
+  /* BADGE */
+  .badge { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 50px; white-space: nowrap; }
+  .badge-confirmed { background: var(--green-light); color: var(--teal); }
+  .badge-pending   { background: var(--yellow-light); color: #92400e; }
+  .badge-cancelled { background: var(--red-light); color: var(--red); }
+  .badge-done      { background: #f3f4f6; color: var(--text-muted); }
+  .badge-ongoing   { background: var(--blue-light); color: var(--blue); }
+  .badge-analysis  { background: var(--yellow-light); color: #92400e; }
+  .badge-ready     { background: var(--green-light); color: var(--teal); }
+
+  /* EXAME ITEM */
+  .exame-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .exame-item:last-child { border-bottom: none; }
+  .exame-icon { width: 36px; height: 36px; background: var(--blue-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .exame-info { flex: 1; }
+  .exame-tipo { font-size: 13px; font-weight: 500; }
+  .exame-local { font-size: 11px; color: var(--text-muted); }
+  .exame-data { font-size: 11px; color: var(--text-muted); }
+
+  /* NOTIFICACAO */
+  .notif-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .notif-dot.green { background: var(--green); }
+  .notif-dot.yellow{ background: var(--yellow); }
+  .notif-dot.blue  { background: var(--blue); }
+  .notif-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .notif-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { font-size: 13px; padding: 14px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+  .td-muted { color: var(--text-muted); }
+
+  /* BTN SMALL */
+  .btn-sm { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border-strong); background: none; color: var(--text-muted); transition: all .15s; }
+  .btn-sm:hover { border-color: var(--green); color: var(--teal); background: var(--green-light); }
+  .btn-sm.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+  .empty-state svg { opacity: 0.3; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+  .empty-state a, .empty-state button { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; background: var(--green); color: #fff; border: none; padding: 10px 20px; border-radius: 50px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif; transition: background .2s; }
+  .empty-state a:hover, .empty-state button:hover { background: var(--teal); }
+
+  /* LOADING */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 48px; color: var(--text-muted); gap: 10px; font-size: 14px; }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PERFIL */
+  .perfil-header { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
+  .perfil-avatar { width: 72px; height: 72px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: var(--teal); }
+  .perfil-name { font-size: 22px; font-weight: 600; }
+  .perfil-email { font-size: 14px; color: var(--text-muted); }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .info-field { display: flex; flex-direction: column; gap: 4px; }
+  .info-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 500; }
+  .info-value { font-size: 14px; color: var(--text); font-weight: 400; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 13px; z-index: 9999; opacity: 0; transform: translateY(8px); transition: all .3s; pointer-events: none; max-width: 320px; }
+  .toast.show { opacity: 1; transform: none; }
+  .toast.success { background: var(--teal); }
+  .toast.error { background: var(--red); }
+
+  /* PRONTUARIO */
+  .pront-item { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 12px; }
+  .pront-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .pront-medico { font-size: 13px; font-weight: 500; color: var(--text); }
+  .pront-data { font-size: 11px; color: var(--text-muted); }
+  .pront-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .pront-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; background: var(--blue-light); color: var(--blue); padding: 3px 10px; border-radius: 50px; margin-top: 8px; }
+
+  /* PAGE HEADER */
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .page-header h2 { font-size: 20px; font-weight: 600; }
+  .page-header p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .section-link { font-size: 13px; color: var(--green); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; font-family: inherit; }
+  .section-link:hover { color: var(--teal); }
+
+  /* MOBILE NAV */
+  .mobile-nav { display: none; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 49; }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); transition: transform .3s; }
+    .sidebar.open { transform: none; }
+    .overlay.show { display: block; }
+    .main { margin-left: 0; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .dash-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr; }
+    .mobile-nav { display: flex; align-items: center; gap: 12px; }
+    .btn-menu { background: none; border: none; cursor: pointer; color: var(--text); padding: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <a href="medflow.html" class="sidebar-logo">
+    <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="10" fill="#1D9E75"/>
+      <path d="M10 18h4l3-7 4 14 3-9 2 2h4" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="logo-text">Med<span>Flow</span></span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <button class="nav-item active" onclick="setPage('dashboard')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Início
+    </button>
+    <button class="nav-item" onclick="setPage('consultas')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Consultas
+      <span class="nav-badge" id="badge-consultas" style="display:none">0</span>
+    </button>
+    <button class="nav-item" onclick="setPage('exames')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11M5 9h14M5 21h14a2 2 0 0 0 2-2v-4M5 21a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
+      Exames
+    </button>
+    <button class="nav-item" onclick="setPage('prontuarios')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Prontuários
+    </button>
+    <div class="nav-section-label">Conta</div>
+    <button class="nav-item" onclick="setPage('perfil')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Meu Perfil
+    </button>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="avatar-initials">?</div>
+    <div class="user-info">
+      <div class="user-name" id="sidebar-nome">Carregando...</div>
+      <div class="user-role">Paciente</div>
+    </div>
+    <button class="btn-logout" onclick="logout()" title="Sair">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="mobile-nav">
+        <button class="btn-menu" onclick="openSidebar()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+      <span class="topbar-title" id="topbar-title">Meu Painel</span>
+    </div>
+    <div class="topbar-actions">
+      <a href="agendar-consulta.html" class="btn-agendar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova Consulta
+      </a>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <div class="stat-value" id="stat-consultas">—</div>
+          <div class="stat-label">Total de consultas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11M5 9h14M5 21h14a2 2 0 0 0 2-2v-4M5 21a2 2 0 0 1-2-2v-4m0 0h18"/></svg></div>
+          <div class="stat-value" id="stat-exames">—</div>
+          <div class="stat-label">Exames realizados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="stat-value" id="stat-proxima">—</div>
+          <div class="stat-label">Próxima consulta</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="stat-value" id="stat-prontuarios">—</div>
+          <div class="stat-label">Prontuários</div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div>
+          <div class="card" style="margin-bottom:18px">
+            <div class="card-header">
+              <span class="card-title">Próximas consultas</span>
+              <button class="section-link" onclick="setPage('consultas')">Ver todas <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
+            <div class="card-body" id="dash-consultas-list">
+              <div class="loading"><div class="spinner"></div> Carregando...</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Exames recentes</span>
+              <button class="section-link" onclick="setPage('exames')">Ver todos <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
+            <div class="card-body" id="dash-exames-list">
+              <div class="loading"><div class="spinner"></div> Carregando...</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Notificações</span>
+            </div>
+            <div class="card-body" id="notif-list">
+              <!-- notificações dinâmicas -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSULTAS -->
+    <div class="page" id="page-consultas">
+      <div class="page-header">
+        <div>
+          <h2>Minhas Consultas</h2>
+          <p>Histórico e próximas consultas agendadas</p>
+        </div>
+        <a href="agendar-consulta.html" class="btn-agendar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agendar
+        </a>
+      </div>
+      <div class="card">
+        <div class="table-wrap" id="consultas-table-wrap">
+          <div class="loading"><div class="spinner"></div> Carregando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXAMES -->
+    <div class="page" id="page-exames">
+      <div class="page-header">
+        <div>
+          <h2>Meus Exames</h2>
+          <p>Acompanhe o status dos seus exames</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap" id="exames-table-wrap">
+          <div class="loading"><div class="spinner"></div> Carregando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRONTUÁRIOS -->
+    <div class="page" id="page-prontuarios">
+      <div class="page-header">
+        <div>
+          <h2>Prontuários</h2>
+          <p>Registros médicos do seu histórico de saúde</p>
+        </div>
+      </div>
+      <div id="prontuarios-list">
+        <div class="loading"><div class="spinner"></div> Carregando...</div>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+    <div class="page" id="page-perfil">
+      <div class="page-header">
+        <div><h2>Meu Perfil</h2><p>Seus dados pessoais cadastrados no MedFlow</p></div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="perfil-body">
+          <div class="loading"><div class="spinner"></div> Carregando...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:3000'
+
+// MOCK DATA para demo sem backend
+const MOCK_USUARIO = {
+  id: 'u1', nome: 'João', sobrenome: 'Silva', email: 'joao@email.com',
+  cpf: '12345678900', criado_em: '2024-01-15', total_consultas: 4, total_exames: 6, total_prontuarios: 2
+}
+const MOCK_CONSULTAS = [
+  { id:'c1', data_hora: new Date(Date.now()+2*86400000).toISOString(), status:'AGENDADA', profissional_nome:'Dr. Carlos Mendes', especialidade:'Cardiologia', unidade_nome:'UBS Boa Vista', cidade:'Recife', observacoes:'' },
+  { id:'c2', data_hora: new Date(Date.now()+7*86400000).toISOString(), status:'CONFIRMADA', profissional_nome:'Dra. Ana Lima', especialidade:'Clínica Geral', unidade_nome:'UPA Afogados', cidade:'Recife', observacoes:'' },
+  { id:'c3', data_hora: new Date(Date.now()-10*86400000).toISOString(), status:'CONCLUIDA', profissional_nome:'Dr. Paulo Souza', especialidade:'Ortopedia', unidade_nome:'Hospital da Restauração', cidade:'Recife', observacoes:'' },
+  { id:'c4', data_hora: new Date(Date.now()-30*86400000).toISOString(), status:'CONCLUIDA', profissional_nome:'Dra. Maria Costa', especialidade:'Ginecologia', unidade_nome:'UBS Boa Vista', cidade:'Recife', observacoes:'' },
+]
+const MOCK_EXAMES = [
+  { id:'e1', tipo:'Hemograma Completo', data_agendada: new Date(Date.now()+3*86400000).toISOString(), status:'AGENDADO', unidade_nome:'UBS Boa Vista' },
+  { id:'e2', tipo:'Glicemia em Jejum', data_agendada: new Date(Date.now()-5*86400000).toISOString(), status:'PRONTO', unidade_nome:'UPA Afogados' },
+  { id:'e3', tipo:'Raio-X Tórax', data_agendada: new Date(Date.now()-15*86400000).toISOString(), status:'PRONTO', unidade_nome:'Hospital da Restauração' },
+  { id:'e4', tipo:'Colesterol Total', data_agendada: new Date(Date.now()-20*86400000).toISOString(), status:'EM_ANALISE', unidade_nome:'UBS Boa Vista' },
+]
+const MOCK_PRONTUARIOS = [
+  { id:'p1', profissional_nome:'Dr. Paulo Souza', especialidade:'Ortopedia', unidade_nome:'Hospital da Restauração', criado_em: new Date(Date.now()-10*86400000).toISOString(), descricao:'Paciente relata dor no joelho direito há 2 semanas. Sem trauma. Exame físico com leve edema.', diagnostico:'Gonalgia direita', cid10:'M25.5', encaminhamento:null },
+  { id:'p2', profissional_nome:'Dra. Maria Costa', especialidade:'Ginecologia', unidade_nome:'UBS Boa Vista', criado_em: new Date(Date.now()-30*86400000).toISOString(), descricao:'Consulta de rotina. Exames preventivos em dia. Sem queixas.', diagnostico:'Consulta de rotina', cid10:null, encaminhamento:null },
+]
+
+// Override api para retornar mock
+async function api(path) {
+  if (path.includes('/usuarios/me')) return MOCK_USUARIO
+  if (path.includes('/consultas')) return MOCK_CONSULTAS
+  if (path.includes('/exames')) return MOCK_EXAMES
+  if (path.includes('/prontuarios')) return MOCK_PRONTUARIOS
+  return []
+}
+
+let token = localStorage.getItem('mf_token') || sessionStorage.getItem('mf_token')
+let usuario = null
+
+// REDIRECT se não autenticado
+// sem redirect no modo demo
+
+// UTILS
+function fmt(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' })
+}
+function fmtHora(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })
+}
+function fmtDia(iso) {
+  const d = new Date(iso)
+  return { dia: d.getDate().toString().padStart(2,'0'), mes: d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','') }
+}
+function badgeConsulta(s) {
+  const map = {
+    AGENDADA:     ['badge-pending','Agendada'],
+    CONFIRMADA:   ['badge-confirmed','Confirmada'],
+    EM_ANDAMENTO: ['badge-ongoing','Em andamento'],
+    CONCLUIDA:    ['badge-done','Concluída'],
+    CANCELADA:    ['badge-cancelled','Cancelada'],
+    FALTA:        ['badge-cancelled','Falta'],
+  }
+  const [cls, label] = map[s] || ['badge-pending', s]
+  return `<span class="badge ${cls}">${label}</span>`
+}
+function badgeExame(s) {
+  const map = {
+    AGENDADO:   ['badge-pending','Agendado'],
+    COLETADO:   ['badge-ongoing','Coletado'],
+    EM_ANALISE: ['badge-analysis','Em análise'],
+    PRONTO:     ['badge-ready','Pronto'],
+    CANCELADO:  ['badge-cancelled','Cancelado'],
+  }
+  const [cls, label] = map[s] || ['badge-pending', s]
+  return `<span class="badge ${cls}">${label}</span>`
+}
+function initials(nome) { return (nome||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase() }
+function showToast(msg, type='') {
+  const t = document.getElementById('toast')
+  t.textContent = msg; t.className = `toast show ${type}`
+  setTimeout(() => t.className = 'toast', 3000)
+}
+
+async function api(path, opts={}) {
+  const r = await fetch(API + path, {
+    ...opts,
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers||{}) }
+  })
+  if (r.status === 401) { logout(); return null; }
+  if (!r.ok) { const e = await r.json().catch(()=>{}); throw new Error(e?.message || 'Erro na requisição') }
+  return r.json()
+}
+
+// SIDEBAR NAV
+function setPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'))
+  document.getElementById('page-' + id).classList.add('active')
+  const btn = [...document.querySelectorAll('.nav-item')].find(b => b.getAttribute('onclick')?.includes(id))
+  if (btn) btn.classList.add('active')
+  const titles = { dashboard: 'Meu Painel', consultas: 'Minhas Consultas', exames: 'Meus Exames', prontuarios: 'Prontuários', perfil: 'Meu Perfil' }
+  document.getElementById('topbar-title').textContent = titles[id] || 'MedFlow'
+  closeSidebar()
+}
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show') }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show') }
+function logout() { localStorage.removeItem('mf_token'); sessionStorage.removeItem('mf_token'); window.location.href = 'login.html' }
+
+// LOAD USUARIO
+async function loadUsuario() {
+  try {
+    usuario = await api('/usuarios/me')
+    if (!usuario) return
+    document.getElementById('sidebar-nome').textContent = usuario.nome + ' ' + (usuario.sobrenome||'')
+    document.getElementById('avatar-initials').textContent = initials(usuario.nome + ' ' + (usuario.sobrenome||''))
+    document.getElementById('stat-consultas').textContent = usuario.total_consultas ?? 0
+    document.getElementById('stat-exames').textContent = usuario.total_exames ?? 0
+    document.getElementById('stat-prontuarios').textContent = usuario.total_prontuarios ?? 0
+  } catch(e) { showToast('Erro ao carregar dados do usuário', 'error') }
+}
+
+// LOAD CONSULTAS
+async function loadConsultas() {
+  try {
+    const consultas = await api('/consultas')
+    if (!consultas) return
+
+    // Proxima
+    const futuras = consultas.filter(c => new Date(c.data_hora) > new Date() && c.status !== 'CANCELADA')
+    futuras.sort((a,b) => new Date(a.data_hora) - new Date(b.data_hora))
+    if (futuras.length > 0) {
+      const prox = futuras[0]
+      document.getElementById('stat-proxima').textContent = fmt(prox.data_hora)
+    } else {
+      document.getElementById('stat-proxima').textContent = 'Nenhuma'
+    }
+
+    // Badge sidebar
+    const pendentes = consultas.filter(c => ['AGENDADA','CONFIRMADA'].includes(c.status) && new Date(c.data_hora) > new Date())
+    const badge = document.getElementById('badge-consultas')
+    if (pendentes.length > 0) { badge.textContent = pendentes.length; badge.style.display = '' }
+
+    // Dashboard list (proximas 3)
+    const dashList = document.getElementById('dash-consultas-list')
+    const proximas = futuras.slice(0,3)
+    if (proximas.length === 0) {
+      dashList.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><p>Nenhuma consulta agendada</p><a href="agendar-consulta.html">Agendar agora</a></div>`
+    } else {
+      dashList.innerHTML = proximas.map(c => {
+        const {dia, mes} = fmtDia(c.data_hora)
+        return `<div class="consulta-item">
+          <div class="consulta-date"><div class="day">${dia}</div><div class="mon">${mes}</div></div>
+          <div class="consulta-info">
+            <div class="consulta-medico">${c.profissional_nome || c.medico_nome || 'Profissional'}</div>
+            <div class="consulta-esp">${c.especialidade || 'Consulta geral'}</div>
+            <div class="consulta-meta">
+              <span class="consulta-hora"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${fmtHora(c.data_hora)}</span>
+              <span class="consulta-local"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${c.unidade_nome || '—'}, ${c.cidade||''}</span>
+              ${badgeConsulta(c.status)}
+            </div>
+          </div>
+        </div>`
+      }).join('')
+    }
+
+    // Full table
+    const tableWrap = document.getElementById('consultas-table-wrap')
+    if (consultas.length === 0) {
+      tableWrap.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><p>Você ainda não tem consultas</p><a href="agendar-consulta.html">Agendar primeira consulta</a></div>`
+    } else {
+      tableWrap.innerHTML = `<table>
+        <thead><tr><th>Data</th><th>Médico</th><th>Especialidade</th><th>Unidade</th><th>Status</th><th></th></tr></thead>
+        <tbody>${consultas.map(c => `<tr>
+          <td><strong>${fmt(c.data_hora)}</strong><br><span style="font-size:11px;color:var(--text-muted)">${fmtHora(c.data_hora)}</span></td>
+          <td>${c.profissional_nome || c.medico_nome || '—'}</td>
+          <td class="td-muted">${c.especialidade || '—'}</td>
+          <td class="td-muted">${c.unidade_nome || '—'}</td>
+          <td>${badgeConsulta(c.status)}</td>
+          <td>${['AGENDADA','CONFIRMADA'].includes(c.status) ? `<button class="btn-sm danger" onclick="cancelarConsulta('${c.id}')">Cancelar</button>` : ''}</td>
+        </tr>`).join('')}</tbody>
+      </table>`
+    }
+  } catch(e) { showToast('Erro ao carregar consultas: ' + e.message, 'error') }
+}
+
+async function cancelarConsulta(id) {
+  if (!confirm('Tem certeza que deseja cancelar esta consulta?')) return
+  try {
+    await api('/consultas/' + id + '/cancelar', { method: 'PATCH' })
+    showToast('Consulta cancelada', 'success')
+    loadConsultas()
+  } catch(e) { showToast(e.message, 'error') }
+}
+
+// LOAD EXAMES
+async function loadExames() {
+  try {
+    const exames = await api('/exames')
+    if (!exames) return
+
+    const dashList = document.getElementById('dash-exames-list')
+    const recentes = exames.slice(0,3)
+    if (recentes.length === 0) {
+      dashList.innerHTML = `<div class="empty-state" style="padding:24px"><p>Nenhum exame registrado</p></div>`
+    } else {
+      dashList.innerHTML = recentes.map(e => `<div class="exame-item">
+        <div class="exame-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11M5 9h14M5 21h14a2 2 0 0 0 2-2v-4M5 21a2 2 0 0 1-2-2v-4m0 0h18"/></svg></div>
+        <div class="exame-info">
+          <div class="exame-tipo">${e.tipo}</div>
+          <div class="exame-local">${e.unidade_nome||'—'}</div>
+        </div>
+        <div style="text-align:right">
+          ${badgeExame(e.status)}
+          <div class="exame-data" style="margin-top:4px">${fmt(e.data_agendada)}</div>
+        </div>
+      </div>`).join('')
+    }
+
+    const tableWrap = document.getElementById('exames-table-wrap')
+    if (exames.length === 0) {
+      tableWrap.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11M5 9h14"/></svg><p>Nenhum exame registrado</p></div>`
+    } else {
+      tableWrap.innerHTML = `<table>
+        <thead><tr><th>Tipo</th><th>Data Agendada</th><th>Unidade</th><th>Status</th><th>Resultado</th></tr></thead>
+        <tbody>${exames.map(e => `<tr>
+          <td><strong>${e.tipo}</strong></td>
+          <td>${fmt(e.data_agendada)}</td>
+          <td class="td-muted">${e.unidade_nome||'—'}</td>
+          <td>${badgeExame(e.status)}</td>
+          <td>${e.status === 'PRONTO' ? `<button class="btn-sm" onclick="verResultado('${e.id}')">Ver resultado</button>` : '<span style="color:var(--text-muted);font-size:12px">—</span>'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`
+    }
+  } catch(e) { showToast('Erro ao carregar exames: ' + e.message, 'error') }
+}
+
+function verResultado(id) { showToast('Resultado disponível — funcionalidade completa na próxima sprint') }
+
+// LOAD PRONTUARIOS
+async function loadProntuarios() {
+  if (!usuario) return
+  try {
+    const pront = await api('/prontuarios/paciente/' + usuario.id)
+    if (!pront) return
+    document.getElementById('stat-prontuarios').textContent = pront.length
+    const list = document.getElementById('prontuarios-list')
+    if (pront.length === 0) {
+      list.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhum prontuário registrado ainda</p></div>`
+    } else {
+      list.innerHTML = pront.map(p => `<div class="pront-item">
+        <div class="pront-header">
+          <div>
+            <div class="pront-medico">Dr(a). ${p.profissional_nome||'—'} · ${p.especialidade||'Geral'}</div>
+            <div class="pront-data">${fmt(p.criado_em)} · ${p.unidade_nome||''}</div>
+          </div>
+          ${p.cid10 ? `<span class="badge badge-ongoing">CID: ${p.cid10}</span>` : ''}
+        </div>
+        <div class="pront-desc">${p.descricao||'—'}</div>
+        ${p.diagnostico ? `<div class="pront-tag"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Diagnóstico: ${p.diagnostico}</div>` : ''}
+        ${p.encaminhamento ? `<div class="pront-tag" style="background:var(--yellow-light);color:#92400e;margin-left:6px">Encaminhamento: ${p.encaminhamento}</div>` : ''}
+      </div>`).join('')
+    }
+  } catch(e) { showToast('Erro ao carregar prontuários: ' + e.message, 'error') }
+}
+
+// LOAD PERFIL
+function loadPerfil() {
+  if (!usuario) return
+  document.getElementById('perfil-body').innerHTML = `
+    <div class="perfil-header">
+      <div class="perfil-avatar">${initials(usuario.nome + ' ' + (usuario.sobrenome||''))}</div>
+      <div>
+        <div class="perfil-name">${usuario.nome} ${usuario.sobrenome||''}</div>
+        <div class="perfil-email">${usuario.email}</div>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-field"><span class="info-label">CPF</span><span class="info-value">${usuario.cpf ? usuario.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '—'}</span></div>
+      <div class="info-field"><span class="info-label">E-mail</span><span class="info-value">${usuario.email||'—'}</span></div>
+      <div class="info-field"><span class="info-label">Membro desde</span><span class="info-value">${fmt(usuario.criado_em)}</span></div>
+      <div class="info-field"><span class="info-label">Total de consultas</span><span class="info-value">${usuario.total_consultas||0}</span></div>
+    </div>`
+}
+
+// NOTIFICACOES (locais baseadas em dados)
+function buildNotificacoes(consultas, exames) {
+  const notifs = []
+  const hoje = new Date()
+  if (consultas) {
+    consultas.filter(c => {
+      const d = new Date(c.data_hora)
+      const diff = (d - hoje) / (1000*60*60*24)
+      return diff > 0 && diff <= 3 && c.status !== 'CANCELADA'
+    }).forEach(c => notifs.push({ dot: 'yellow', text: `Consulta amanhã com ${c.profissional_nome||c.medico_nome||'médico'} às ${fmtHora(c.data_hora)}`, time: 'Lembrete' }))
+    if (exames) exames.filter(e => e.status === 'PRONTO').forEach(e => notifs.push({ dot: 'green', text: `Resultado do exame "${e.tipo}" está disponível`, time: 'Resultado pronto' }))
+    consultas.filter(c => c.status === 'CONFIRMADA').forEach(c => notifs.push({ dot: 'blue', text: `Consulta com ${c.profissional_nome||'médico'} confirmada para ${fmt(c.data_hora)}`, time: 'Confirmação' }))
+  }
+  if (notifs.length === 0) notifs.push({ dot: 'green', text: 'Bem-vindo ao MedFlow! Tudo em dia.', time: 'Agora' })
+  return notifs
+}
+
+// INIT
+async function init() {
+  await loadUsuario()
+  const [consultas, exames] = await Promise.allSettled([
+    api('/consultas').catch(()=>[]),
+    api('/exames').catch(()=>[])
+  ])
+  const c = consultas.value || []
+  const e = exames.value || []
+
+  // Recarregar com dados
+  await loadConsultas()
+  await loadExames()
+  loadPerfil()
+
+  // Notificações
+  const notifs = buildNotificacoes(c, e)
+  document.getElementById('notif-list').innerHTML = notifs.map(n => `<div class="notif-item">
+    <div class="notif-dot ${n.dot}"></div>
+    <div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div>
+  </div>`).join('')
+}
+
+init()
+
+// Lazy load prontuários ao abrir aba
+const origSetPage = setPage
+window.setPage = function(id) {
+  origSetPage(id)
+  if (id === 'prontuarios') loadProntuarios()
+}
+</script>
+</body>
+</html>

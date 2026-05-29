@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedFlow — Agendar Consulta</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1D9E75; --green-light: #E1F5EE; --green-mid: #9FE1CB; --teal: #0F6E56;
+    --blue: #1E40AF; --blue-light: #EFF6FF;
+    --yellow: #fbbf24; --yellow-light: #fef9e7;
+    --red: #ef4444; --red-light: #fef2f2;
+    --text: #1a1a1a; --text-muted: #6b7280; --text-light: #9ca3af;
+    --bg: #f9fafb; --bg-card: #ffffff;
+    --border: rgba(0,0,0,0.07); --border-strong: rgba(0,0,0,0.13);
+    --radius: 16px; --radius-sm: 10px;
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-green: 0 4px 14px rgba(29,158,117,0.3);
+    --sidebar-w: 240px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh; }
+
+  /* SIDEBAR (reutiliza do dashboard) */
+  .sidebar { width: var(--sidebar-w); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 20px 16px; border-bottom: 1px solid var(--border); text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); }
+  .logo-text span { color: var(--green); }
+  .sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+  .nav-section-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); padding: 8px 10px 4px; margin-top: 8px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); text-decoration: none; color: var(--text-muted); font-size: 14px; transition: background .15s, color .15s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--green-light); color: var(--teal); font-weight: 500; }
+  .nav-item svg { flex-shrink: 0; stroke: currentColor; }
+  .sidebar-user { border-top: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 36px; height: 36px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--teal); flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--text-muted); }
+  .btn-logout { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 6px; transition: all .2s; }
+  .btn-logout:hover { color: var(--red); background: var(--red-light); }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+  .topbar { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 40; }
+  .topbar-back { display: flex; align-items: center; gap: 7px; color: var(--text-muted); text-decoration: none; font-size: 14px; transition: color .2s; border: none; background: none; cursor: pointer; font-family: inherit; }
+  .topbar-back:hover { color: var(--green); }
+  .topbar-sep { color: var(--border-strong); font-size: 18px; }
+  .topbar-title { font-size: 16px; font-weight: 500; }
+
+  /* CONTEÚDO */
+  .content { padding: 32px 28px; max-width: 900px; }
+
+  /* PROGRESS STEPS */
+  .steps { display: flex; align-items: center; gap: 0; margin-bottom: 36px; }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; position: relative; }
+  .step:not(:last-child)::after { content: ''; position: absolute; top: 16px; left: calc(50% + 16px); right: calc(-50% + 16px); height: 2px; background: var(--border-strong); z-index: 0; }
+  .step:not(:last-child).done::after { background: var(--green); }
+  .step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; border: 2px solid var(--border-strong); background: var(--bg-card); color: var(--text-muted); z-index: 1; transition: all .3s; }
+  .step.active .step-circle { border-color: var(--green); background: var(--green); color: #fff; }
+  .step.done .step-circle { border-color: var(--green); background: var(--green); color: #fff; }
+  .step-label { font-size: 11px; color: var(--text-muted); font-weight: 500; text-align: center; }
+  .step.active .step-label, .step.done .step-label { color: var(--teal); }
+
+  /* CARD */
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-card); }
+  .card-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
+  .card-header h2 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .card-header p { font-size: 13px; color: var(--text-muted); }
+  .card-body { padding: 24px; }
+
+  /* ESPECIALIDADES GRID */
+  .esp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .esp-btn { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg-card); cursor: pointer; transition: all .2s; font-family: inherit; text-align: left; }
+  .esp-btn:hover { border-color: var(--green); background: var(--green-light); }
+  .esp-btn.selected { border-color: var(--green); background: var(--green-light); }
+  .esp-icon { width: 38px; height: 38px; background: var(--bg); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; transition: background .2s; }
+  .esp-btn.selected .esp-icon, .esp-btn:hover .esp-icon { background: var(--bg-card); }
+  .esp-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .esp-desc { font-size: 11px; color: var(--text-muted); }
+
+  /* MEDICO CARDS */
+  .medicos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .medico-card { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg-card); cursor: pointer; transition: all .2s; }
+  .medico-card:hover { border-color: var(--green); background: var(--green-light); }
+  .medico-card.selected { border-color: var(--green); background: var(--green-light); box-shadow: 0 0 0 3px rgba(29,158,117,.1); }
+  .medico-avatar { width: 46px; height: 46px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: var(--teal); flex-shrink: 0; }
+  .medico-nome { font-size: 14px; font-weight: 500; }
+  .medico-esp { font-size: 12px; color: var(--text-muted); }
+  .medico-crm { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* UNIDADES */
+  .unidades-list { display: flex; flex-direction: column; gap: 10px; }
+  .unidade-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg-card); cursor: pointer; transition: all .2s; }
+  .unidade-item:hover { border-color: var(--green); background: var(--green-light); }
+  .unidade-item.selected { border-color: var(--green); background: var(--green-light); }
+  .unidade-icon { width: 40px; height: 40px; background: var(--blue-light); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .unidade-nome { font-size: 14px; font-weight: 500; }
+  .unidade-end { font-size: 12px; color: var(--text-muted); }
+  .unidade-tipo { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 50px; background: var(--blue-light); color: var(--blue); margin-left: auto; }
+
+  /* CALENDÁRIO */
+  .calendar-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-title { font-size: 15px; font-weight: 600; }
+  .cal-nav { background: none; border: 1px solid var(--border-strong); border-radius: 8px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; }
+  .cal-nav:hover { border-color: var(--green); color: var(--teal); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day-label { text-align: center; font-size: 11px; font-weight: 500; color: var(--text-muted); padding: 6px 0; }
+  .cal-day { text-align: center; padding: 8px 0; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all .2s; color: var(--text-muted); }
+  .cal-day:hover:not(.disabled):not(.empty) { background: var(--green-light); color: var(--teal); }
+  .cal-day.available { color: var(--text); cursor: pointer; }
+  .cal-day.selected { background: var(--green); color: #fff; font-weight: 600; }
+  .cal-day.today { font-weight: 700; color: var(--teal); }
+  .cal-day.disabled { color: var(--text-light); cursor: not-allowed; }
+  .cal-day.empty { cursor: default; }
+
+  /* HORÁRIOS */
+  .horarios-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+  .horario-btn { padding: 10px; border: 1.5px solid var(--border-strong); border-radius: 8px; background: var(--bg-card); cursor: pointer; text-align: center; font-size: 13px; font-weight: 500; color: var(--text); transition: all .2s; font-family: inherit; }
+  .horario-btn:hover { border-color: var(--green); color: var(--teal); background: var(--green-light); }
+  .horario-btn.selected { background: var(--green); border-color: var(--green); color: #fff; }
+  .horario-btn.ocupado { background: var(--bg); color: var(--text-light); cursor: not-allowed; border-color: var(--border); text-decoration: line-through; }
+
+  /* RESUMO */
+  .resumo-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .resumo-item:last-child { border-bottom: none; }
+  .resumo-icon { width: 36px; height: 36px; background: var(--green-light); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .resumo-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 500; margin-bottom: 2px; }
+  .resumo-value { font-size: 14px; font-weight: 500; color: var(--text); }
+  .resumo-sub { font-size: 12px; color: var(--text-muted); }
+
+  /* FORM */
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); background: var(--bg-card); transition: border-color .2s; }
+  .form-input:focus { outline: none; border-color: var(--green); }
+  textarea.form-input { resize: vertical; min-height: 90px; }
+
+  /* BOTÕES */
+  .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--green); color: #fff; border: none; padding: 13px 26px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all .2s; box-shadow: var(--shadow-green); }
+  .btn-primary:hover { background: var(--teal); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-outline { display: inline-flex; align-items: center; gap: 8px; background: none; color: var(--text-muted); border: 1.5px solid var(--border-strong); padding: 12px 22px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .2s; }
+  .btn-outline:hover { border-color: var(--text-muted); color: var(--text); }
+  .nav-btns { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; }
+
+  /* SUCCESS */
+  .success-screen { text-align: center; padding: 48px 24px; }
+  .success-icon { width: 72px; height: 72px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .success-title { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .success-desc { font-size: 15px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.7; }
+  .success-code { display: inline-block; background: var(--green-light); color: var(--teal); font-size: 14px; font-weight: 600; padding: 8px 20px; border-radius: 50px; margin-bottom: 28px; }
+
+  /* LOADING / EMPTY */
+  .loading { text-align: center; padding: 32px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty-msg { text-align: center; padding: 32px; color: var(--text-muted); font-size: 14px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 13px; z-index: 9999; opacity: 0; transform: translateY(8px); transition: all .3s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: none; }
+  .toast.error { background: var(--red); }
+  .toast.success { background: var(--teal); }
+
+  /* MOBILE */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 49; }
+  .mobile-nav { display: none; }
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); transition: transform .3s; }
+    .sidebar.open { transform: none; }
+    .overlay.show { display: block; }
+    .main { margin-left: 0; }
+    .esp-grid { grid-template-columns: 1fr 1fr; }
+    .medicos-grid { grid-template-columns: 1fr; }
+    .horarios-grid { grid-template-columns: repeat(3, 1fr); }
+    .calendar-wrap { grid-template-columns: 1fr; }
+    .content { padding: 20px 16px; }
+    .mobile-nav { display: flex; }
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <a href="medflow.html" class="sidebar-logo">
+    <svg width="28" height="28" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="10" fill="#1D9E75"/><path d="M10 18h4l3-7 4 14 3-9 2 2h4" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="logo-text">Med<span>Flow</span></span>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <a href="dashboard-paciente.html" class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Início
+    </a>
+    <a href="dashboard-paciente.html#consultas" class="nav-item">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Consultas
+    </a>
+    <button class="nav-item active">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Agendar Consulta
+    </button>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="avatar-initials">?</div>
+    <div class="user-info">
+      <div class="user-name" id="sidebar-nome">...</div>
+      <div class="user-role">Paciente</div>
+    </div>
+    <button class="btn-logout" onclick="logout()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="mobile-nav">
+        <button style="background:none;border:none;cursor:pointer;display:flex" onclick="openSidebar()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+      <a href="dashboard-paciente.html" class="topbar-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Voltar
+      </a>
+      <span class="topbar-sep">/</span>
+      <span class="topbar-title">Agendar Consulta</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- STEPS -->
+    <div class="steps" id="steps-bar">
+      <div class="step active" id="step-1"><div class="step-circle">1</div><div class="step-label">Especialidade</div></div>
+      <div class="step" id="step-2"><div class="step-circle">2</div><div class="step-label">Médico</div></div>
+      <div class="step" id="step-3"><div class="step-circle">3</div><div class="step-label">Unidade</div></div>
+      <div class="step" id="step-4"><div class="step-circle">4</div><div class="step-label">Data e Hora</div></div>
+      <div class="step" id="step-5"><div class="step-circle">5</div><div class="step-label">Confirmação</div></div>
+    </div>
+
+    <!-- ETAPA 1: ESPECIALIDADE -->
+    <div id="etapa-1" class="card">
+      <div class="card-header">
+        <h2>Qual especialidade você precisa?</h2>
+        <p>Selecione a especialidade médica para a sua consulta</p>
+      </div>
+      <div class="card-body">
+        <div class="esp-grid" id="esp-grid">
+          <div class="loading"><div class="spinner"></div> Carregando...</div>
+        </div>
+        <div class="nav-btns">
+          <div></div>
+          <button class="btn-primary" id="btn-prox-1" onclick="irParaEtapa(2)" disabled>
+            Próximo <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETAPA 2: MÉDICO -->
+    <div id="etapa-2" class="card" style="display:none">
+      <div class="card-header">
+        <h2>Escolha o médico</h2>
+        <p id="subtitulo-medico">Profissionais disponíveis</p>
+      </div>
+      <div class="card-body">
+        <div class="medicos-grid" id="medicos-grid">
+          <div class="loading"><div class="spinner"></div> Buscando médicos...</div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn-outline" onclick="irParaEtapa(1)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Voltar
+          </button>
+          <button class="btn-primary" id="btn-prox-2" onclick="irParaEtapa(3)" disabled>
+            Próximo <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETAPA 3: UNIDADE -->
+    <div id="etapa-3" class="card" style="display:none">
+      <div class="card-header">
+        <h2>Selecione a unidade de saúde</h2>
+        <p>Escolha a unidade onde deseja realizar a consulta</p>
+      </div>
+      <div class="card-body">
+        <div class="unidades-list" id="unidades-list">
+          <div class="loading"><div class="spinner"></div> Buscando unidades...</div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn-outline" onclick="irParaEtapa(2)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Voltar
+          </button>
+          <button class="btn-primary" id="btn-prox-3" onclick="irParaEtapa(4)" disabled>
+            Próximo <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETAPA 4: DATA E HORA -->
+    <div id="etapa-4" class="card" style="display:none">
+      <div class="card-header">
+        <h2>Escolha data e horário</h2>
+        <p>Selecione um dia e horário disponível</p>
+      </div>
+      <div class="card-body">
+        <div class="calendar-wrap">
+          <div>
+            <div class="cal-header">
+              <button class="cal-nav" onclick="mudarMes(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+              <span class="cal-title" id="cal-title"></span>
+              <button class="cal-nav" onclick="mudarMes(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:500;margin-bottom:14px" id="horarios-title">Selecione um dia para ver horários</div>
+            <div id="horarios-wrap"></div>
+            <div class="form-group" style="margin-top:20px">
+              <label class="form-label">Observações (opcional)</label>
+              <textarea class="form-input" id="observacoes" placeholder="Descreva brevemente o motivo da consulta..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn-outline" onclick="irParaEtapa(3)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Voltar
+          </button>
+          <button class="btn-primary" id="btn-prox-4" onclick="irParaEtapa(5)" disabled>
+            Revisar agendamento <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETAPA 5: CONFIRMAÇÃO -->
+    <div id="etapa-5" class="card" style="display:none">
+      <div class="card-header">
+        <h2>Confirme seu agendamento</h2>
+        <p>Revise os detalhes antes de confirmar</p>
+      </div>
+      <div class="card-body" id="resumo-body">
+      </div>
+    </div>
+
+    <!-- SUCESSO -->
+    <div id="tela-sucesso" style="display:none">
+      <div class="card">
+        <div class="success-screen">
+          <div class="success-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2 class="success-title">Consulta agendada com sucesso!</h2>
+          <p class="success-desc">Sua consulta foi registrada no sistema.<br>Você receberá um lembrete antes da data.</p>
+          <div class="success-code" id="success-info"></div>
+          <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+            <a href="dashboard-paciente.html" class="btn-primary">Ver minhas consultas</a>
+            <button class="btn-outline" onclick="reiniciar()">Agendar outra consulta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:3000'
+
+async function api(path, opts={}) {
+  if (path.includes('/usuarios/me')) return { nome:'João', sobrenome:'Silva', email:'joao@email.com' }
+  if (path.includes('/profissionais')) return [
+    { id:'m1', nome:'Dr. Carlos Mendes', especialidade: new URLSearchParams(path.split('?')[1]).get('especialidade')||'Clínica Geral', crm:'12345-PE' },
+    { id:'m2', nome:'Dra. Ana Paula Lima', especialidade: new URLSearchParams(path.split('?')[1]).get('especialidade')||'Clínica Geral', crm:'67890-PE' },
+    { id:'m3', nome:'Dr. Roberto Freitas', especialidade: new URLSearchParams(path.split('?')[1]).get('especialidade')||'Clínica Geral', crm:'11111-PE' },
+  ]
+  if (path.includes('/unidades')) return [
+    { id:'u1', nome:'UBS Boa Vista', endereco:'Rua das Flores, 100', cidade:'Recife', tipo:'UBS', telefone:'(81) 3333-1111' },
+    { id:'u2', nome:'UPA 24h Afogados', endereco:'Av. Caxangá, 3200', cidade:'Recife', tipo:'UPA', telefone:'(81) 3333-2222' },
+    { id:'u3', nome:'Hospital da Restauração', endereco:'Av. Gov. Agamenon Magalhães, s/n', cidade:'Recife', tipo:'HOSPITAL', telefone:'(81) 3333-3333' },
+    { id:'u4', nome:'AME Recife', endereco:'Rua Padre Carapuceiro, 808', cidade:'Recife', tipo:'AME', telefone:'(81) 3333-4444' },
+  ]
+  if (path.includes('/consultas') && opts.method==='POST') {
+    return { id:'nova-consulta-123', status:'AGENDADA' }
+  }
+  return {}
+}
+
+let token = localStorage.getItem('mf_token') || sessionStorage.getItem('mf_token')
+// sem redirect no modo demo
+
+// ESTADO
+const sel = { especialidade: null, profissionalId: null, profissionalNome: null, unidadeId: null, unidadeNome: null, data: null, hora: null }
+let calAno = new Date().getFullYear(), calMes = new Date().getMonth()
+
+// UTILS
+function initials(n) { return (n||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase() }
+function fmt(iso) { if(!iso) return '—'; return new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}) }
+function fmtDisplay(iso) { if(!iso) return '—'; return new Date(iso).toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) }
+function showToast(msg, type='') {
+  const t = document.getElementById('toast'); t.textContent = msg; t.className = `toast show ${type}`
+  setTimeout(() => t.className = 'toast', 3500)
+}
+function logout() { localStorage.removeItem('mf_token'); sessionStorage.removeItem('mf_token'); window.location.href = 'login.html' }
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show') }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show') }
+
+async function api(path, opts={}) {
+  const r = await fetch(API + path, { ...opts, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers||{}) } })
+  if (r.status === 401) { logout(); return null }
+  if (!r.ok) { const e = await r.json().catch(()=>{}); throw new Error(e?.message || 'Erro') }
+  return r.json()
+}
+
+// ESPECIALIDADES (estáticas + carregadas da API se disponível)
+const ESPECIALIDADES = [
+  { id: 'Clínica Geral', nome: 'Clínica Geral', desc: 'Consulta de rotina', emoji: '🩺' },
+  { id: 'Cardiologia', nome: 'Cardiologia', desc: 'Coração e vasos', emoji: '❤️' },
+  { id: 'Pediatria', nome: 'Pediatria', desc: 'Crianças e adolescentes', emoji: '👶' },
+  { id: 'Ginecologia', nome: 'Ginecologia', desc: 'Saúde da mulher', emoji: '🌸' },
+  { id: 'Ortopedia', nome: 'Ortopedia', desc: 'Ossos e articulações', emoji: '🦴' },
+  { id: 'Neurologia', nome: 'Neurologia', desc: 'Sistema nervoso', emoji: '🧠' },
+  { id: 'Oftalmologia', nome: 'Oftalmologia', desc: 'Olhos e visão', emoji: '👁️' },
+  { id: 'Dermatologia', nome: 'Dermatologia', desc: 'Pele e cabelo', emoji: '🔬' },
+  { id: 'Psiquiatria', nome: 'Psiquiatria', desc: 'Saúde mental', emoji: '🧘' },
+]
+
+function loadEspecialidades() {
+  const grid = document.getElementById('esp-grid')
+  grid.innerHTML = ESPECIALIDADES.map(e => `
+    <button class="esp-btn" onclick="selecionarEsp('${e.id}', this)">
+      <div class="esp-icon">${e.emoji}</div>
+      <div><div class="esp-name">${e.nome}</div><div class="esp-desc">${e.desc}</div></div>
+    </button>`).join('')
+}
+
+function selecionarEsp(id, btn) {
+  sel.especialidade = id
+  sel.profissionalId = null; sel.profissionalNome = null
+  document.querySelectorAll('.esp-btn').forEach(b => b.classList.remove('selected'))
+  btn.classList.add('selected')
+  document.getElementById('btn-prox-1').disabled = false
+}
+
+// MÉDICOS
+async function loadMedicos(especialidade) {
+  const grid = document.getElementById('medicos-grid')
+  grid.innerHTML = `<div class="loading"><div class="spinner"></div> Buscando...</div>`
+  document.getElementById('subtitulo-medico').textContent = `Médicos em ${especialidade}`
+  try {
+    const data = await api('/profissionais?especialidade=' + encodeURIComponent(especialidade))
+    const lista = data || []
+    if (lista.length === 0) {
+      grid.innerHTML = `<div class="empty-msg" style="grid-column:1/-1">Nenhum médico disponível para esta especialidade no momento.</div>`
+    } else {
+      grid.innerHTML = lista.map(m => `
+        <div class="medico-card" onclick="selecionarMedico('${m.id}', '${m.nome}', this)">
+          <div class="medico-avatar">${initials(m.nome)}</div>
+          <div>
+            <div class="medico-nome">${m.nome}</div>
+            <div class="medico-esp">${m.especialidade||especialidade}</div>
+            <div class="medico-crm">${m.crm ? 'CRM: ' + m.crm : m.matricula || ''}</div>
+          </div>
+        </div>`).join('')
+    }
+  } catch(e) {
+    // Fallback: médicos de exemplo para não bloquear o fluxo
+    grid.innerHTML = `
+      <div class="medico-card" onclick="selecionarMedico('demo-1', 'Dr. Carlos Mendes', this)">
+        <div class="medico-avatar">CM</div>
+        <div><div class="medico-nome">Dr. Carlos Mendes</div><div class="medico-esp">${especialidade}</div><div class="medico-crm">CRM: 12345-PE</div></div>
+      </div>
+      <div class="medico-card" onclick="selecionarMedico('demo-2', 'Dra. Ana Paula Lima', this)">
+        <div class="medico-avatar">AL</div>
+        <div><div class="medico-nome">Dra. Ana Paula Lima</div><div class="medico-esp">${especialidade}</div><div class="medico-crm">CRM: 67890-PE</div></div>
+      </div>`
+  }
+}
+
+function selecionarMedico(id, nome, el) {
+  sel.profissionalId = id; sel.profissionalNome = nome
+  document.querySelectorAll('.medico-card').forEach(c => c.classList.remove('selected'))
+  el.classList.add('selected')
+  document.getElementById('btn-prox-2').disabled = false
+}
+
+// UNIDADES
+async function loadUnidades() {
+  const list = document.getElementById('unidades-list')
+  list.innerHTML = `<div class="loading"><div class="spinner"></div> Buscando unidades...</div>`
+  try {
+    const data = await api('/unidades')
+    const lista = data || []
+    if (lista.length === 0) {
+      list.innerHTML = renderUnidadesDemo()
+    } else {
+      list.innerHTML = lista.map(u => `
+        <div class="unidade-item" onclick="selecionarUnidade('${u.id}', '${u.nome}', this)">
+          <div class="unidade-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div style="flex:1">
+            <div class="unidade-nome">${u.nome}</div>
+            <div class="unidade-end">${u.endereco}, ${u.cidade}</div>
+            ${u.telefone ? `<div style="font-size:11px;color:var(--text-muted)">${u.telefone}</div>` : ''}
+          </div>
+          <span class="unidade-tipo">${u.tipo}</span>
+        </div>`).join('')
+    }
+  } catch { list.innerHTML = renderUnidadesDemo() }
+}
+
+function renderUnidadesDemo() {
+  const demos = [
+    { id:'u1', nome:'UBS Boa Vista', end:'Rua das Flores, 100', cidade:'Recife', tipo:'UBS' },
+    { id:'u2', nome:'UPA 24h Afogados', end:'Av. Caxangá, 3200', cidade:'Recife', tipo:'UPA' },
+    { id:'u3', nome:'Hospital da Restauração', end:'Av. Gov. Agamenon Magalhães, s/n', cidade:'Recife', tipo:'HOSPITAL' },
+  ]
+  return demos.map(u => `
+    <div class="unidade-item" onclick="selecionarUnidade('${u.id}', '${u.nome}', this)">
+      <div class="unidade-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div style="flex:1"><div class="unidade-nome">${u.nome}</div><div class="unidade-end">${u.end}, ${u.cidade}</div></div>
+      <span class="unidade-tipo">${u.tipo}</span>
+    </div>`).join('')
+}
+
+function selecionarUnidade(id, nome, el) {
+  sel.unidadeId = id; sel.unidadeNome = nome
+  document.querySelectorAll('.unidade-item').forEach(i => i.classList.remove('selected'))
+  el.classList.add('selected')
+  document.getElementById('btn-prox-3').disabled = false
+}
+
+// CALENDÁRIO
+function renderCalendario() {
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+  document.getElementById('cal-title').textContent = `${meses[calMes]} ${calAno}`
+  const grid = document.getElementById('cal-grid')
+  const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
+  let html = dias.map(d => `<div class="cal-day-label">${d}</div>`).join('')
+  const primeiro = new Date(calAno, calMes, 1)
+  const total = new Date(calAno, calMes+1, 0).getDate()
+  const hoje = new Date(); hoje.setHours(0,0,0,0)
+  for (let i = 0; i < primeiro.getDay(); i++) html += `<div class="cal-day empty"></div>`
+  for (let d = 1; d <= total; d++) {
+    const data = new Date(calAno, calMes, d)
+    const isPast = data < hoje
+    const isWeekend = data.getDay() === 0 || data.getDay() === 6
+    const dataStr = `${calAno}-${String(calMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+    const isHoje = data.getTime() === hoje.getTime()
+    const isSel = sel.data === dataStr
+    let cls = 'cal-day'
+    if (isPast || isWeekend) cls += ' disabled'
+    else cls += ' available'
+    if (isHoje) cls += ' today'
+    if (isSel) cls += ' selected'
+    html += `<div class="${cls}" onclick="${(isPast||isWeekend)?'':'selecionarData(\''+dataStr+'\', this)'}">${d}</div>`
+  }
+  grid.innerHTML = html
+}
+
+function mudarMes(delta) {
+  calMes += delta
+  if (calMes < 0) { calMes = 11; calAno-- }
+  if (calMes > 11) { calMes = 0; calAno++ }
+  renderCalendario()
+}
+
+const HORARIOS_DISPONIVEIS = ['07:00','07:30','08:00','08:30','09:00','09:30','10:00','10:30','11:00','14:00','14:30','15:00','15:30','16:00','16:30','17:00']
+const HORARIOS_OCUPADOS_DEMO = ['09:00','10:30','14:00']
+
+function selecionarData(dataStr, el) {
+  sel.data = dataStr; sel.hora = null
+  document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'))
+  el.classList.add('selected')
+  const dataFmt = new Date(dataStr + 'T00:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})
+  document.getElementById('horarios-title').textContent = `Horários para ${dataFmt}`
+  document.getElementById('horarios-wrap').innerHTML = `<div class="horarios-grid">${HORARIOS_DISPONIVEIS.map(h => {
+    const ocupado = HORARIOS_OCUPADOS_DEMO.includes(h)
+    return `<button class="horario-btn${ocupado?' ocupado':''}" ${ocupado?'disabled':''} onclick="selecionarHora('${h}', this)">${h}</button>`
+  }).join('')}</div>`
+  document.getElementById('btn-prox-4').disabled = true
+}
+
+function selecionarHora(hora, btn) {
+  sel.hora = hora
+  document.querySelectorAll('.horario-btn').forEach(b => b.classList.remove('selected'))
+  btn.classList.add('selected')
+  document.getElementById('btn-prox-4').disabled = false
+}
+
+// NAVEGAÇÃO
+function irParaEtapa(n) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('etapa-' + i)
+    if (el) el.style.display = i === n ? 'block' : 'none'
+    const step = document.getElementById('step-' + i)
+    if (step) {
+      step.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '')
+    }
+  }
+  if (n === 2) loadMedicos(sel.especialidade)
+  if (n === 3) loadUnidades()
+  if (n === 4) { renderCalendario() }
+  if (n === 5) renderResumo()
+  window.scrollTo(0, 0)
+}
+
+function renderResumo() {
+  const obs = document.getElementById('observacoes').value
+  const dataDisplay = sel.data ? fmtDisplay(sel.data + 'T' + sel.hora + ':00') : '—'
+  document.getElementById('resumo-body').innerHTML = `
+    <div class="resumo-item">
+      <div class="resumo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div><div class="resumo-label">Especialidade</div><div class="resumo-value">${sel.especialidade||'—'}</div></div>
+    </div>
+    <div class="resumo-item">
+      <div class="resumo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <div><div class="resumo-label">Médico</div><div class="resumo-value">${sel.profissionalNome||'—'}</div></div>
+    </div>
+    <div class="resumo-item">
+      <div class="resumo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+      <div><div class="resumo-label">Unidade</div><div class="resumo-value">${sel.unidadeNome||'—'}</div></div>
+    </div>
+    <div class="resumo-item">
+      <div class="resumo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+      <div><div class="resumo-label">Data e Hora</div><div class="resumo-value">${dataDisplay}</div><div class="resumo-sub">${sel.hora||''}</div></div>
+    </div>
+    ${obs ? `<div class="resumo-item"><div class="resumo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><div class="resumo-label">Observações</div><div class="resumo-value" style="font-weight:400">${obs}</div></div></div>` : ''}
+    <div class="nav-btns" style="margin-top:24px">
+      <button class="btn-outline" onclick="irParaEtapa(4)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Voltar</button>
+      <button class="btn-primary" onclick="confirmarAgendamento()" id="btn-confirmar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirmar Agendamento
+      </button>
+    </div>`
+}
+
+// CONFIRMAR
+async function confirmarAgendamento() {
+  if (!sel.profissionalId || !sel.unidadeId || !sel.data || !sel.hora) {
+    showToast('Preencha todos os campos antes de confirmar', 'error'); return
+  }
+  const btn = document.getElementById('btn-confirmar')
+  btn.disabled = true; btn.textContent = 'Agendando...'
+  const dataHora = new Date(`${sel.data}T${sel.hora}:00`).toISOString()
+  const obs = document.getElementById('observacoes').value
+  try {
+    const result = await api('/consultas', {
+      method: 'POST',
+      body: JSON.stringify({ medicoId: sel.profissionalId, unidadeId: sel.unidadeId, dataHora, observacoes: obs || undefined })
+    })
+    document.getElementById('etapa-5').style.display = 'none'
+    document.getElementById('steps-bar').style.display = 'none'
+    document.getElementById('tela-sucesso').style.display = 'block'
+    const d = new Date(dataHora)
+    document.getElementById('success-info').textContent = `${sel.profissionalNome} · ${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})} às ${sel.hora}`
+    window.scrollTo(0,0)
+  } catch(e) {
+    showToast('Erro ao agendar: ' + e.message, 'error')
+    btn.disabled = false; btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Confirmar Agendamento`
+  }
+}
+
+function reiniciar() {
+  Object.keys(sel).forEach(k => sel[k] = null)
+  document.getElementById('tela-sucesso').style.display = 'none'
+  document.getElementById('steps-bar').style.display = 'flex'
+  document.getElementById('etapa-1').style.display = 'block'
+  document.getElementById('observacoes') && (document.getElementById('observacoes').value = '')
+  document.querySelectorAll('.step').forEach((s,i) => s.className = 'step' + (i===0?' active':''))
+  loadEspecialidades()
+  document.getElementById('btn-prox-1').disabled = true
+}
+
+// LOAD USUARIO
+async function init() {
+  try {
+    const u = await api('/usuarios/me')
+    if (u) {
+      document.getElementById('sidebar-nome').textContent = u.nome + ' ' + (u.sobrenome||'')
+      document.getElementById('avatar-initials').textContent = initials(u.nome + ' ' + (u.sobrenome||''))
+    }
+  } catch {}
+  loadEspecialidades()
+}
+
+init()
+</script>
+</body>
+</html>
