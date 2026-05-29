@@ -403,7 +403,7 @@ async function api(path, opts={}) {
 }
 
 let token = localStorage.getItem('mf_token') || sessionStorage.getItem('mf_token')
-// sem redirect no modo demo
+if (!token) window.location.replace('login.html')
 
 // ESTADO
 const sel = { especialidade: null, profissionalId: null, profissionalNome: null, unidadeId: null, unidadeNome: null, data: null, hora: null }

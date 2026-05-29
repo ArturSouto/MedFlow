@@ -2,31 +2,32 @@ import 'dotenv/config'
 import pool from './pool'
 
 async function migrate() {
-  const conn = await pool.getConnection()
+  const client = await pool.connect()
 
   try {
-    await conn.query('SET FOREIGN_KEY_CHECKS = 0')
+    await client.query('BEGIN')
 
-    await conn.query(`
+    await client.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`)
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS usuarios (
-        id            CHAR(36)     NOT NULL DEFAULT (UUID()),
+        id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
         nome          VARCHAR(100) NOT NULL,
         sobrenome     VARCHAR(100) NOT NULL,
         cpf           CHAR(11)     NOT NULL,
         email         VARCHAR(255) NOT NULL,
         senha_hash    VARCHAR(255) NOT NULL,
-        ativo         TINYINT(1)   NOT NULL DEFAULT 1,
-        criado_em     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        atualizado_em DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        UNIQUE KEY uq_cpf (cpf),
-        UNIQUE KEY uq_email (email)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ativo         BOOLEAN      NOT NULL DEFAULT TRUE,
+        criado_em     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        atualizado_em TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        CONSTRAINT uq_usuario_cpf   UNIQUE (cpf),
+        CONSTRAINT uq_usuario_email UNIQUE (email)
+      )
     `)
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS profissionais (
-        id            CHAR(36)     NOT NULL DEFAULT (UUID()),
+        id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
         nome          VARCHAR(200) NOT NULL,
         crm           VARCHAR(30),
         matricula     VARCHAR(50),
@@ -34,95 +35,118 @@ async function migrate() {
         senha_hash    VARCHAR(255) NOT NULL,
         especialidade VARCHAR(100),
         cargo         VARCHAR(100) NOT NULL DEFAULT 'Médico',
-        ativo         TINYINT(1)   NOT NULL DEFAULT 1,
-        criado_em     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        atualizado_em DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        UNIQUE KEY uq_prof_email (email),
-        UNIQUE KEY uq_crm (crm)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ativo         BOOLEAN      NOT NULL DEFAULT TRUE,
+        criado_em     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        atualizado_em TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        CONSTRAINT uq_prof_email UNIQUE (email),
+        CONSTRAINT uq_prof_crm   UNIQUE (crm)
+      )
     `)
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS unidades_saude (
-        id        CHAR(36)     NOT NULL DEFAULT (UUID()),
-        nome      VARCHAR(200) NOT NULL,
-        endereco  VARCHAR(300) NOT NULL,
-        cidade    VARCHAR(100) NOT NULL,
-        estado    CHAR(2)      NOT NULL,
-        telefone  VARCHAR(20),
-        tipo      ENUM('UBS','UPA','HOSPITAL','AME','CAPS') NOT NULL,
-        ativo     TINYINT(1)   NOT NULL DEFAULT 1,
-        PRIMARY KEY (id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        id       UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+        nome     VARCHAR(200) NOT NULL,
+        endereco VARCHAR(300) NOT NULL,
+        cidade   VARCHAR(100) NOT NULL,
+        estado   CHAR(2)      NOT NULL,
+        telefone VARCHAR(20),
+        tipo     VARCHAR(20)  NOT NULL CHECK (tipo IN ('UBS','UPA','HOSPITAL','AME','CAPS')),
+        ativo    BOOLEAN      NOT NULL DEFAULT TRUE
+      )
     `)
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS consultas (
-        id               CHAR(36)  NOT NULL DEFAULT (UUID()),
-        usuario_id       CHAR(36)  NOT NULL,
-        profissional_id  CHAR(36),
-        unidade_id       CHAR(36)  NOT NULL,
-        data_hora        DATETIME  NOT NULL,
-        status           ENUM('AGENDADA','CONFIRMADA','EM_ANDAMENTO','CONCLUIDA','CANCELADA','FALTA') NOT NULL DEFAULT 'AGENDADA',
+        id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        usuario_id       UUID        NOT NULL REFERENCES usuarios(id),
+        profissional_id  UUID        REFERENCES profissionais(id),
+        unidade_id       UUID        NOT NULL REFERENCES unidades_saude(id),
+        data_hora        TIMESTAMPTZ NOT NULL,
+        status           VARCHAR(20) NOT NULL DEFAULT 'AGENDADA'
+                           CHECK (status IN ('AGENDADA','CONFIRMADA','EM_ANDAMENTO','CONCLUIDA','CANCELADA','FALTA')),
         observacoes      TEXT,
         anotacoes_medico TEXT,
-        criado_em        DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        atualizado_em    DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        CONSTRAINT fk_consulta_usuario       FOREIGN KEY (usuario_id)      REFERENCES usuarios (id),
-        CONSTRAINT fk_consulta_profissional  FOREIGN KEY (profissional_id) REFERENCES profissionais (id),
-        CONSTRAINT fk_consulta_unidade       FOREIGN KEY (unidade_id)      REFERENCES unidades_saude (id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        criado_em        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        atualizado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
     `)
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS exames (
-        id             CHAR(36)     NOT NULL DEFAULT (UUID()),
-        usuario_id     CHAR(36)     NOT NULL,
-        consulta_id    CHAR(36),
-        unidade_id     CHAR(36)     NOT NULL,
+        id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        usuario_id     UUID        NOT NULL REFERENCES usuarios(id),
+        consulta_id    UUID        REFERENCES consultas(id),
+        unidade_id     UUID        NOT NULL REFERENCES unidades_saude(id),
         tipo           VARCHAR(100) NOT NULL,
-        data_agendada  DATETIME     NOT NULL,
-        data_resultado DATETIME,
-        status         ENUM('AGENDADO','COLETADO','EM_ANALISE','PRONTO','CANCELADO') NOT NULL DEFAULT 'AGENDADO',
+        data_agendada  TIMESTAMPTZ NOT NULL,
+        data_resultado TIMESTAMPTZ,
+        status         VARCHAR(20) NOT NULL DEFAULT 'AGENDADO'
+                         CHECK (status IN ('AGENDADO','COLETADO','EM_ANALISE','PRONTO','CANCELADO')),
         resultado      TEXT,
         laudo          TEXT,
-        criado_em      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        atualizado_em  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        CONSTRAINT fk_exame_usuario   FOREIGN KEY (usuario_id)  REFERENCES usuarios (id),
-        CONSTRAINT fk_exame_consulta  FOREIGN KEY (consulta_id) REFERENCES consultas (id),
-        CONSTRAINT fk_exame_unidade   FOREIGN KEY (unidade_id)  REFERENCES unidades_saude (id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        criado_em      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        atualizado_em  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
     `)
 
-    await conn.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS prontuarios (
-        id               CHAR(36)  NOT NULL DEFAULT (UUID()),
-        usuario_id       CHAR(36)  NOT NULL,
-        profissional_id  CHAR(36)  NOT NULL,
-        consulta_id      CHAR(36),
-        descricao        TEXT      NOT NULL,
+        id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        usuario_id       UUID        NOT NULL REFERENCES usuarios(id),
+        profissional_id  UUID        NOT NULL REFERENCES profissionais(id),
+        consulta_id      UUID        REFERENCES consultas(id),
+        descricao        TEXT        NOT NULL,
         diagnostico      VARCHAR(500),
         cid10            VARCHAR(20),
         encaminhamento   TEXT,
-        criado_em        DATETIME  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        CONSTRAINT fk_pront_usuario      FOREIGN KEY (usuario_id)      REFERENCES usuarios (id),
-        CONSTRAINT fk_pront_profissional FOREIGN KEY (profissional_id) REFERENCES profissionais (id),
-        CONSTRAINT fk_pront_consulta     FOREIGN KEY (consulta_id)     REFERENCES consultas (id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        criado_em        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
     `)
 
-    await conn.query('SET FOREIGN_KEY_CHECKS = 1')
+    /* Trigger para atualizar atualizado_em automaticamente */
+    await client.query(`
+      CREATE OR REPLACE FUNCTION set_atualizado_em()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.atualizado_em = NOW();
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql
+    `)
 
-    console.log('Tabelas criadas com sucesso.')
+    for (const tabela of ['usuarios', 'profissionais', 'consultas', 'exames']) {
+      await client.query(`
+        DROP TRIGGER IF EXISTS trg_${tabela}_atualizado_em ON ${tabela};
+        CREATE TRIGGER trg_${tabela}_atualizado_em
+          BEFORE UPDATE ON ${tabela}
+          FOR EACH ROW EXECUTE FUNCTION set_atualizado_em()
+      `)
+    }
+
+    /* Seed: unidades de saúde para demonstração */
+    await client.query(`
+      INSERT INTO unidades_saude (nome, endereco, cidade, estado, telefone, tipo)
+      SELECT * FROM (VALUES
+        ('UBS Boa Vista',              'Rua das Flores, 100',                       'Recife',        'PE', '(81) 3333-1111', 'UBS'),
+        ('UPA 24h Afogados',           'Av. Caxangá, 3200',                         'Recife',        'PE', '(81) 3333-2222', 'UPA'),
+        ('Hospital da Restauração',    'Av. Gov. Agamenon Magalhães, s/n',           'Recife',        'PE', '(81) 3333-3333', 'HOSPITAL'),
+        ('UBS Vila Nova',              'Rua Principal, 45',                         'Olinda',        'PE', '(81) 3333-4444', 'UBS'),
+        ('AME Recife',                 'Av. Agamenon Magalhães, 4760',               'Recife',        'PE', '(81) 3333-5555', 'AME'),
+        ('CAPS Centro',                'Rua da Aurora, 200',                        'Recife',        'PE', '(81) 3333-6666', 'CAPS'),
+        ('Hospital Universitário',     'Av. Prof. Moraes Rego, 1235',               'Recife',        'PE', '(81) 3333-7777', 'HOSPITAL')
+      ) AS v(nome, endereco, cidade, estado, telefone, tipo)
+      WHERE NOT EXISTS (SELECT 1 FROM unidades_saude LIMIT 1)
+    `)
+
+    await client.query('COMMIT')
+    console.log('✅ Migração concluída com sucesso.')
   } catch (err) {
-    console.error('Erro na migration:', err)
+    await client.query('ROLLBACK')
+    console.error('❌ Erro na migração:', err)
     process.exit(1)
   } finally {
-    conn.release()
+    client.release()
     await pool.end()
   }
 }

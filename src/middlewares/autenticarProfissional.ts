@@ -2,17 +2,11 @@ import { Request, Response, NextFunction } from 'express'
 import pool from '../db/pool'
 import { AppError } from '../utils/AppError'
 
-declare global {
-  namespace Express {
-    interface Request {
-      usuarioId: string
-      usuarioEmail: string
-      profissionalId: string
-    }
-  }
-}
-
-export async function autenticar(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function autenticarProfissional(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
     return next(new AppError('Token não fornecido', 401))
@@ -24,12 +18,12 @@ export async function autenticar(req: Request, _res: Response, next: NextFunctio
 
   try {
     const { rows } = await pool.query<{ id: string; email: string }>(
-      'SELECT id, email FROM usuarios WHERE id = $1 AND ativo = TRUE LIMIT 1',
+      'SELECT id, email FROM profissionais WHERE id = $1 AND ativo = TRUE LIMIT 1',
       [id]
     )
-    if (rows.length === 0) return next(new AppError('Usuário não autenticado', 401))
+    if (rows.length === 0) return next(new AppError('Profissional não autenticado', 401))
 
-    req.usuarioId = rows[0].id
+    req.profissionalId = rows[0].id
     req.usuarioEmail = rows[0].email
     next()
   } catch {

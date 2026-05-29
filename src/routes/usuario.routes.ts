@@ -7,16 +7,18 @@ usuarioRoutes.use(autenticar)
 
 usuarioRoutes.get('/me', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const [rows] = await pool.query<any[]>(
+    const { rows } = await pool.query(
       `SELECT
          u.id, u.nome, u.sobrenome, u.email, u.cpf, u.criado_em,
-         (SELECT COUNT(*) FROM consultas WHERE usuario_id = u.id) AS total_consultas,
-         (SELECT COUNT(*) FROM exames    WHERE usuario_id = u.id) AS total_exames
+         (SELECT COUNT(*) FROM consultas   WHERE usuario_id = u.id)::int AS total_consultas,
+         (SELECT COUNT(*) FROM exames      WHERE usuario_id = u.id)::int AS total_exames,
+         (SELECT COUNT(*) FROM prontuarios WHERE usuario_id = u.id)::int AS total_prontuarios
        FROM usuarios u
-       WHERE u.id = ? LIMIT 1`,
+       WHERE u.id = $1
+       LIMIT 1`,
       [req.usuarioId]
     )
-    if ((rows as any[]).length === 0) {
+    if (rows.length === 0) {
       res.status(404).json({ message: 'Usuário não encontrado' })
       return
     }

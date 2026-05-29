@@ -676,7 +676,7 @@
     btn.disabled = true
 
     try {
-      const res = await fetch('http://localhost:3333/auth/login', {
+      const res = await fetch('http://localhost:3000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, senha })
@@ -687,7 +687,7 @@
       if (res.ok) {
         localStorage.setItem('mf_token', data.token)
         localStorage.setItem('mf_user', JSON.stringify(data.usuario))
-        window.location.href = 'dashboard.html'
+        window.location.href = 'dashboard-paciente.html'
       } else {
         const banner = document.getElementById('errorBanner')
         document.getElementById('errorMsg').textContent = data.message || 'E-mail ou senha incorretos.'

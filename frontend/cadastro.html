@@ -724,7 +724,7 @@
         </div>
         <h3>Conta criada!</h3>
         <p>Bem-vindo ao MedFlow. Sua conta foi criada com sucesso. Agora você pode agendar consultas e acompanhar seus exames.</p>
-        <a href="dashboard.html" class="btn-dashboard">
+        <a href="dashboard-paciente.html" class="btn-dashboard">
           Ir para o painel
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -866,7 +866,7 @@
     btn.disabled = true;
 
     try {
-      const res = await fetch('http://localhost:3333/auth/register', {
+      const res = await fetch('http://localhost:3000/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome, sobrenome, cpf: cpf.replace(/\D/g,''), email, senha })

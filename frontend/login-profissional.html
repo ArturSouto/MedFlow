@@ -797,7 +797,7 @@
     btn.disabled = true
 
     try {
-      const res = await fetch('http://localhost:3333/auth/profissional/login', {
+      const res = await fetch('http://localhost:3000/auth/profissional/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -812,7 +812,7 @@
       if (res.ok) {
         localStorage.setItem('mf_prof_token', data.token)
         localStorage.setItem('mf_prof', JSON.stringify(data.profissional))
-        window.location.href = 'dashboard-profissional.html'
+        window.location.href = 'dashboard-medico.html'
       } else {
         const banner = document.getElementById('errorBanner')
         document.getElementById('errorMsg').textContent = data.message || 'Credenciais inválidas ou não autorizadas.'

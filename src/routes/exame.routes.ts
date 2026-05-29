@@ -4,6 +4,6 @@ import { listar, buscar, agendar } from '../controllers/exame.controller'
 
 export const exameRoutes = Router()
 exameRoutes.use(autenticar)
-exameRoutes.get('/', listar)
+exameRoutes.get('/',    listar)
 exameRoutes.get('/:id', buscar)
-exameRoutes.post('/', agendar)
+exameRoutes.post('/',   agendar)

@@ -20,9 +20,7 @@ export async function register(req: Request, res: Response, next: NextFunction) 
     const data = registerSchema.parse(req.body)
     const result = await authService.registrar(data)
     res.status(201).json(result)
-  } catch (err) {
-    next(err)
-  }
+  } catch (err) { next(err) }
 }
 
 export async function loginHandler(req: Request, res: Response, next: NextFunction) {
@@ -30,7 +28,5 @@ export async function loginHandler(req: Request, res: Response, next: NextFuncti
     const data = loginSchema.parse(req.body)
     const result = await authService.login(data)
     res.json(result)
-  } catch (err) {
-    next(err)
-  }
+  } catch (err) { next(err) }
 }

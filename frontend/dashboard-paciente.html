@@ -429,8 +429,7 @@ async function api(path) {
 let token = localStorage.getItem('mf_token') || sessionStorage.getItem('mf_token')
 let usuario = null
 
-// REDIRECT se não autenticado
-// sem redirect no modo demo
+if (!token) window.location.replace('login.html')
 
 // UTILS
 function fmt(iso) {

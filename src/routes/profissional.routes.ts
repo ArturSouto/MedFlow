@@ -1,7 +1,17 @@
 import { Router } from 'express'
-import { loginProfissional, registerProfissional } from '../controllers/profissional.controller'
+import { autenticarProfissional } from '../middlewares/autenticarProfissional'
+import {
+  loginProfissional,
+  registerProfissional,
+  getMe,
+  listarProfissionais,
+} from '../controllers/profissional.controller'
 
-export const profissionalRoutes = Router()
+export const profissionalAuthRoutes = Router()
+profissionalAuthRoutes.post('/login',    loginProfissional)
+profissionalAuthRoutes.post('/register', registerProfissional)
+profissionalAuthRoutes.get('/me',        autenticarProfissional, getMe)
 
-profissionalRoutes.post('/login', loginProfissional)
-profissionalRoutes.post('/register', registerProfissional)
+/* Lista pública de profissionais — usada na página de agendamento */
+export const profissionaisRoutes = Router()
+profissionaisRoutes.get('/', listarProfissionais)

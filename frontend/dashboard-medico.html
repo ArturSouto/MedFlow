@@ -460,7 +460,7 @@ let token = localStorage.getItem('mf_prof_token') || sessionStorage.getItem('mf_
 let profissional = null
 let todasConsultas = []
 
-// sem redirect no modo demo
+if (!token) window.location.replace('login-profissional.html')
 
 // DATA
 document.getElementById('topbar-data').textContent = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' })
