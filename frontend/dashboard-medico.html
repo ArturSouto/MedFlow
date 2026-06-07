@@ -127,6 +127,22 @@
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .btn-primary-blue { display: inline-flex; align-items: center; gap: 7px; background: var(--blue); color: #fff; border: none; padding: 11px 22px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .2s; }
   .btn-primary-blue:hover { background: var(--blue-dark); }
+  .btn-outline-blue { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 16px; border-radius: 50px; border: 1.5px solid var(--border-strong); background: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: border-color .2s, color .2s, background .2s; text-decoration: none; }
+  .btn-outline-blue:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+  /* INDICADORES */
+  .insight-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .insight-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-card); }
+  .insight-value { font-size: 23px; font-weight: 600; line-height: 1.1; color: var(--text); margin-bottom: 5px; }
+  .insight-label { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+  .analytics-grid { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr); gap: 18px; align-items: start; margin-bottom: 18px; }
+  .analytics-card-media { padding: 0; background: #0d1b2a; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
+  .analytics-card-media.ubs { background: #1a1a2e; }
+  .analytics-card-media img { display: block; width: 100%; height: auto; }
+  .analytics-card-media.ubs img { max-height: 640px; object-fit: contain; }
+  .analytics-map-body { padding: 0; overflow: hidden; border-radius: 0 0 var(--radius) var(--radius); }
+  .analytics-map { width: 100%; height: min(68vh, 640px); min-height: 440px; border: 0; display: block; background: #f8faff; }
+  .analytics-note { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
 
   /* MODAL */
   .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
@@ -173,7 +189,13 @@
     .stats-grid { grid-template-columns: 1fr 1fr; }
     .dash-grid { grid-template-columns: 1fr; }
     .form-row { grid-template-columns: 1fr; }
+    .insight-grid { grid-template-columns: 1fr 1fr; }
+    .analytics-grid { grid-template-columns: 1fr; }
+    .analytics-map { min-height: 360px; height: 58vh; }
     .mobile-nav { display: flex; }
+  }
+  @media (max-width: 560px) {
+    .insight-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -197,6 +219,10 @@
     <button class="nav-item active" onclick="setPage('dashboard')">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Início
+    </button>
+    <button class="nav-item" onclick="setPage('indicadores')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12" y="7" width="3" height="10" rx="1"/><rect x="17" y="4" width="3" height="13" rx="1"/></svg>
+      Indicadores
     </button>
     <button class="nav-item" onclick="setPage('agenda')">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -298,6 +324,10 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                 Buscar paciente
               </button>
+              <button class="btn-outline-blue" onclick="setPage('indicadores')" style="width:100%">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12" y="7" width="3" height="10" rx="1"/><rect x="17" y="4" width="3" height="13" rx="1"/></svg>
+                Ver indicadores
+              </button>
             </div>
           </div>
 
@@ -309,6 +339,70 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- INDICADORES -->
+    <div class="page" id="page-indicadores">
+      <div class="page-header">
+        <div>
+          <h2>Indicadores epidemiológicos</h2>
+          <p>Análises territoriais e preventivas do Recife para apoio à decisão clínica</p>
+        </div>
+        <a class="section-link" href="assets/graficos/heatmap-recife.html" target="_blank" rel="noopener">Abrir mapa <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></a>
+      </div>
+
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="insight-value">1.942</div>
+          <div class="insight-label">Registros válidos de chikungunya analisados</div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-value">85</div>
+          <div class="insight-label">Bairros com casos identificados na base</div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-value">COHAB</div>
+          <div class="insight-label">Bairro com maior volume de casos no recorte</div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-value">22</div>
+          <div class="insight-label">UBSs mapeadas para leitura de cobertura territorial</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-header">
+          <span class="card-title">Mapa de calor de casos por bairro</span>
+          <a class="section-link" href="assets/graficos/heatmap-recife.html" target="_blank" rel="noopener">Nova aba <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></a>
+        </div>
+        <div class="card-body analytics-map-body">
+          <iframe class="analytics-map" src="assets/graficos/heatmap-recife.html" title="Mapa de calor de casos de chikungunya no Recife"></iframe>
+        </div>
+      </div>
+
+      <div class="analytics-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Incidência por bairro e distribuição por sexo</span></div>
+          <div class="card-body analytics-card-media">
+            <img src="assets/graficos/chikungunya-bairros-sexo.png" alt="Gráfico com incidência de chikungunya por bairro e distribuição por sexo no Recife">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Cobertura de UBSs por bairro</span></div>
+          <div class="card-body analytics-card-media ubs">
+            <img src="assets/graficos/ubs-recife-cobertura.png" alt="Mapa de Recife com cobertura de UBSs por bairro">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Vacinação no Recife</span></div>
+        <div class="card-body analytics-card-media">
+          <img src="assets/graficos/vacinacao-recife.png" alt="Gráfico de doses aplicadas por vacina no Recife entre 2020 e 2022">
+        </div>
+      </div>
+      <p class="analytics-note">Fontes preservadas dos gráficos exportados do notebook em data_graf/Pesquisas MedFlow.ipynb.</p>
     </div>
 
     <!-- AGENDA -->
@@ -424,7 +518,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'http://localhost:3000'
+const API = 'http://localhost:3001'
 
 const MOCK_PROF = {
   id:'prof1', nome:'Dr. Carlos Mendes', email:'carlos@medflow.com',
@@ -492,7 +586,7 @@ function setPage(id) {
   document.getElementById('page-' + id).classList.add('active')
   const btn = [...document.querySelectorAll('.nav-item')].find(b => b.getAttribute('onclick')?.includes(`'${id}'`))
   if (btn) btn.classList.add('active')
-  const titles = { dashboard:'Painel Profissional', agenda:'Minha Agenda', pacientes:'Pacientes', prontuarios:'Prontuários', perfil:'Meu Perfil' }
+  const titles = { dashboard:'Painel Profissional', indicadores:'Indicadores', agenda:'Minha Agenda', pacientes:'Pacientes', prontuarios:'Prontuários', perfil:'Meu Perfil' }
   document.getElementById('topbar-title').textContent = titles[id] || 'MedFlow'
   closeSidebar()
   if (id === 'agenda') renderAgendaTable(todasConsultas)

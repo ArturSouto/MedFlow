@@ -10,6 +10,7 @@ dist/
 # Logs
 *.log
 npm-debug.log*
+.npm-cache/
 
 # Sistema operacional
 .DS_Store

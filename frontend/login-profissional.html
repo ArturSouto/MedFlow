@@ -628,8 +628,8 @@
       </div>
 
       <div class="tab-switch">
-        <button class="tab-btn active" onclick="setTab('crm')" id="tabCrm">CRM / Matrícula</button>
-        <button class="tab-btn" onclick="setTab('email')" id="tabEmail">E-mail institucional</button>
+        <button class="tab-btn" onclick="setTab('crm')" id="tabCrm">CRM / Matrícula</button>
+        <button class="tab-btn active" onclick="setTab('email')" id="tabEmail">E-mail institucional</button>
       </div>
 
       <div class="error-banner" id="errorBanner">
@@ -641,7 +641,7 @@
       </div>
 
       <form id="loginForm" novalidate>
-        <div id="fieldCrm" class="form-group">
+        <div id="fieldCrm" class="form-group" style="display:none;">
           <label for="crm">CRM / Matrícula institucional</label>
           <div class="input-wrap">
             <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -656,7 +656,7 @@
           </div>
         </div>
 
-        <div id="fieldEmail" class="form-group" style="display:none;">
+        <div id="fieldEmail" class="form-group">
           <label for="emailInst">E-mail institucional</label>
           <div class="input-wrap">
             <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -732,7 +732,7 @@
 <footer>MedFlow · Portal Profissional · Uso restrito a profissionais credenciados pela rede pública</footer>
 
 <script>
-  let activeTab = 'crm'
+  let activeTab = 'email'
 
   function setTab(tab) {
     activeTab = tab
@@ -782,9 +782,11 @@
     if (!senha) { showError('senhaError'); valid = false }
 
     let identifier = ''
+    let loginTipo = activeTab
     if (activeTab === 'crm') {
       identifier = document.getElementById('crm').value.trim()
       if (!identifier) { showError('crmError'); valid = false }
+      if (identifier.includes('@')) loginTipo = 'email'
     } else {
       identifier = document.getElementById('emailInst').value.trim()
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)) { showError('emailInstError'); valid = false }
@@ -797,11 +799,11 @@
     btn.disabled = true
 
     try {
-      const res = await fetch('http://localhost:3000/auth/profissional/login', {
+      const res = await fetch('http://localhost:3001/auth/profissional/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tipo: activeTab,
+          tipo: loginTipo,
           identificador: identifier,
           senha
         })
