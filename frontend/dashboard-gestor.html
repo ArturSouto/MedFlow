@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedFlow — Painel de Gestão Municipal</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1E40AF; --blue-light: #EFF6FF; --blue-mid: #93C5FD; --blue-dark: #1e3a8a;
+    --green: #1D9E75; --green-light: #E1F5EE; --teal: #0F6E56;
+    --purple: #7c3aed; --purple-light: #f5f3ff;
+    --yellow: #f59e0b; --yellow-light: #fef9e7;
+    --red: #ef4444; --red-light: #fef2f2;
+    --orange: #f97316; --orange-light: #fff7ed;
+    --text: #1a1a1a; --text-muted: #6b7280; --text-light: #9ca3af;
+    --bg: #f8faff; --bg-card: #ffffff;
+    --border: rgba(0,0,0,0.07); --border-strong: rgba(0,0,0,0.12);
+    --radius: 16px; --radius-sm: 10px;
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04);
+    --sidebar-w: 240px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { width: var(--sidebar-w); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 20px 16px; border-bottom: 1px solid var(--border); text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); }
+  .logo-text span { color: var(--blue); }
+  .sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+  .nav-section-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); padding: 8px 10px 4px; margin-top: 8px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--text-muted); font-size: 14px; font-weight: 400; transition: background .15s, color .15s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 500; }
+  .nav-item.active svg { stroke: var(--blue); }
+  .nav-item svg { flex-shrink: 0; stroke: currentColor; }
+  .sidebar-user { border-top: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 36px; height: 36px; background: var(--blue-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--blue); flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--text-muted); }
+  .btn-logout { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 6px; transition: color .2s, background .2s; }
+  .btn-logout:hover { color: var(--red); background: var(--red-light); }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-title { font-size: 16px; font-weight: 500; }
+  .topbar-badge { background: var(--blue-light); color: var(--blue); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 50px; }
+  .content { padding: 28px; flex: 1; }
+
+  /* MOBILE */
+  .mobile-nav { display: none; }
+  .btn-menu { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; color: var(--text-muted); }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 45; }
+  .overlay.show { display: block; }
+  @media (max-width: 768px) {
+    .mobile-nav { display: flex; }
+    .sidebar { transform: translateX(-100%); transition: transform .25s; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .content { padding: 16px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .topbar { padding: 0 16px; }
+  }
+
+  /* PAGE */
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .page-header h2 { font-size: 20px; font-weight: 600; }
+  .page-header p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-card); }
+  .stat-icon { width: 42px; height: 42px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .stat-icon.blue   { background: var(--blue-light); }
+  .stat-icon.green  { background: var(--green-light); }
+  .stat-icon.purple { background: var(--purple-light); }
+  .stat-icon.yellow { background: var(--yellow-light); }
+  .stat-icon.orange { background: var(--orange-light); }
+  .stat-icon.red    { background: var(--red-light); }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-size: 13px; color: var(--text-muted); }
+
+  /* CARD */
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-card); margin-bottom: 20px; overflow: hidden; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 14px; border-bottom: 1px solid var(--border); }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-body { padding: 16px 20px; }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* STATUS BARS */
+  .status-list { display: flex; flex-direction: column; gap: 12px; }
+  .status-row { display: flex; flex-direction: column; gap: 5px; }
+  .status-row-top { display: flex; justify-content: space-between; font-size: 13px; }
+  .status-bar-bg { background: var(--bg); border-radius: 50px; height: 8px; overflow: hidden; }
+  .status-bar-fill { height: 100%; border-radius: 50px; transition: width .6s ease; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+  .td-muted { color: var(--text-muted); }
+
+  /* BADGE */
+  .badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 50px; }
+  .badge-ubs      { background: var(--blue-light);   color: var(--blue); }
+  .badge-upa      { background: var(--orange-light);  color: var(--orange); }
+  .badge-hospital { background: var(--red-light);     color: var(--red); }
+  .badge-ame      { background: var(--purple-light);  color: var(--purple); }
+  .badge-caps     { background: var(--green-light);   color: var(--teal); }
+
+  /* STATUS BADGE */
+  .s-agendada    { background: var(--yellow-light); color: #92400e; }
+  .s-confirmada  { background: var(--blue-light);   color: var(--blue); }
+  .s-concluida   { background: var(--green-light);  color: var(--teal); }
+  .s-cancelada   { background: var(--red-light);    color: var(--red); }
+  .s-andamento   { background: var(--purple-light); color: var(--purple); }
+  .s-falta       { background: #f3f4f6;             color: var(--text-muted); }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 32px; color: var(--text-muted); font-size: 13px; }
+
+  /* INDICADORES IMG */
+  .img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .img-card { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+  .img-card img { width: 100%; display: block; }
+  .img-label { font-size: 12px; color: var(--text-muted); padding: 8px 12px; background: var(--bg); }
+  .map-iframe { width: 100%; height: 340px; border: none; border-radius: var(--radius-sm); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: #fff; padding: 12px 22px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 9999; opacity: 0; transition: opacity .25s, transform .25s; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #dc2626; }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <a href="medflow.html" class="sidebar-logo">
+    <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="10" fill="#1E40AF"/>
+      <path d="M12 20h4l3-7 4 14 3-10 2 3h4" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="logo-text">Med<span>Flow</span></span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Painel</div>
+    <button class="nav-item active" onclick="setPage('overview')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Visão geral
+    </button>
+    <button class="nav-item" onclick="setPage('unidades')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Unidades de saúde
+    </button>
+    <button class="nav-item" onclick="setPage('consultas')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Consultas
+    </button>
+    <button class="nav-item" onclick="setPage('indicadores')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Indicadores epidemiológicos
+    </button>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">GM</div>
+    <div class="user-info">
+      <div class="user-name">Gestor Municipal</div>
+      <div class="user-role">Prefeitura do Recife</div>
+    </div>
+    <button class="btn-logout" onclick="window.location.href='medflow.html'" title="Sair">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="mobile-nav">
+        <button class="btn-menu" onclick="openSidebar()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+      <span class="topbar-title" id="topbar-title">Visão Geral</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="topbar-badge">Gestão Municipal</span>
+      <span id="topbar-data" style="font-size:13px;color:var(--text-muted)"></span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <div><h2>Visão Geral</h2><p>Dados consolidados da rede municipal de saúde do Recife</p></div>
+        <button onclick="carregarStats()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;color:var(--text-muted);font-family:inherit;display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Atualizar
+        </button>
+      </div>
+
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="stat-value" id="s-pacientes">—</div><div class="stat-label">Pacientes cadastrados</div></div>
+        <div class="stat-card"><div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.99 12"/><path d="M5.74 5.09A19.8 19.8 0 0 1 3 3.92 2 2 0 0 0 2 5.92v3a2 2 0 0 0 1.72 2c.96.127 1.9.361 2.81.7"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="stat-value" id="s-profissionais">—</div><div class="stat-label">Profissionais ativos</div></div>
+        <div class="stat-card"><div class="stat-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="stat-value" id="s-unidades">—</div><div class="stat-label">Unidades de saúde</div></div>
+        <div class="stat-card"><div class="stat-icon yellow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div class="stat-value" id="s-consultas">—</div><div class="stat-label">Total de consultas</div></div>
+        <div class="stat-card"><div class="stat-icon orange"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11M5 9h14"/></svg></div><div class="stat-value" id="s-exames">—</div><div class="stat-label">Exames registrados</div></div>
+        <div class="stat-card"><div class="stat-icon red"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="stat-value" id="s-prontuarios">—</div><div class="stat-label">Prontuários eletrônicos</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Consultas por status</span></div>
+          <div class="card-body">
+            <div class="status-list" id="status-list"><div class="empty">Carregando...</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Por especialidade</span></div>
+          <div class="card-body">
+            <div class="status-list" id="esp-list"><div class="empty">Carregando...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Últimas consultas registradas</span></div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Data/Hora</th><th>Paciente</th><th>Profissional</th><th>Unidade</th><th>Status</th></tr></thead>
+            <tbody id="ultimas-consultas"><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNIDADES -->
+    <div class="page" id="page-unidades">
+      <div class="page-header"><div><h2>Unidades de Saúde</h2><p>Rede municipal ativa no Recife</p></div></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Todas as unidades</span>
+          <span id="unidades-count" style="font-size:12px;color:var(--text-muted)"></span>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Nome</th><th>Tipo</th><th>Endereço</th><th>Cidade</th><th>Telefone</th><th>Consultas</th></tr></thead>
+            <tbody id="unidades-table"><tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSULTAS -->
+    <div class="page" id="page-consultas">
+      <div class="page-header"><div><h2>Consultas por Unidade</h2><p>Distribuição e taxa de cancelamento por unidade de saúde</p></div></div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Desempenho por unidade</span></div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Unidade</th><th>Tipo</th><th>Total</th><th>Concluídas</th><th>Canceladas</th><th>Taxa cancelamento</th></tr></thead>
+            <tbody id="consultas-unidade-table"><tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- INDICADORES -->
+    <div class="page" id="page-indicadores">
+      <div class="page-header"><div><h2>Indicadores Epidemiológicos</h2><p>Dados da Secretaria de Saúde do Recife</p></div></div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <span class="card-title">Mapa de calor — Chikungunya no Recife</span>
+          <a href="assets/graficos/heatmap-recife.html" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none">Abrir em nova aba</a>
+        </div>
+        <div class="card-body" style="padding:16px">
+          <iframe class="map-iframe" src="assets/graficos/heatmap-recife.html" title="Mapa de calor de casos de chikungunya no Recife"></iframe>
+        </div>
+      </div>
+
+      <div class="img-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Incidência por bairro e sexo</span></div>
+          <div class="card-body" style="padding:12px">
+            <img src="assets/graficos/chikungunya-bairros-sexo.png" alt="Incidência de chikungunya por bairro e sexo" style="width:100%;border-radius:8px">
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Cobertura de UBSs por bairro</span></div>
+          <div class="card-body" style="padding:12px">
+            <img src="assets/graficos/ubs-recife-cobertura.png" alt="Cobertura de UBSs por bairro do Recife" style="width:100%;border-radius:8px">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-header"><span class="card-title">Vacinação no Recife (2020–2022)</span></div>
+        <div class="card-body" style="padding:12px">
+          <img src="assets/graficos/vacinacao-recife.png" alt="Doses aplicadas por vacina no Recife" style="width:100%;border-radius:8px">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:3000'
+  let statsData = null
+
+  document.getElementById('topbar-data').textContent = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' })
+
+  function setPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'))
+    document.getElementById('page-' + id).classList.add('active')
+    const btn = [...document.querySelectorAll('.nav-item')].find(b => b.getAttribute('onclick')?.includes(`'${id}'`))
+    if (btn) btn.classList.add('active')
+    const titles = { overview: 'Visão Geral', unidades: 'Unidades de Saúde', consultas: 'Consultas por Unidade', indicadores: 'Indicadores Epidemiológicos' }
+    document.getElementById('topbar-title').textContent = titles[id] || 'Gestão'
+    closeSidebar()
+    if (id === 'unidades') renderUnidades()
+    if (id === 'consultas') renderConsultasUnidade()
+  }
+
+  function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show') }
+  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show') }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast')
+    t.textContent = msg; t.className = `toast show ${type}`
+    setTimeout(() => t.className = 'toast', 3000)
+  }
+
+  function fmt(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' }) }
+  function fmtHora(iso) { if (!iso) return ''; return new Date(iso).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) }
+
+  function badgeTipo(tipo) {
+    const map = { UBS:'badge-ubs', UPA:'badge-upa', HOSPITAL:'badge-hospital', AME:'badge-ame', CAPS:'badge-caps' }
+    return `<span class="badge ${map[tipo]||'badge-ubs'}">${tipo}</span>`
+  }
+
+  function badgeStatus(status) {
+    const map = {
+      AGENDADA:'s-agendada', CONFIRMADA:'s-confirmada', CONCLUIDA:'s-concluida',
+      CANCELADA:'s-cancelada', EM_ANDAMENTO:'s-andamento', FALTA:'s-falta'
+    }
+    const labels = { AGENDADA:'Agendada', CONFIRMADA:'Confirmada', CONCLUIDA:'Concluída', CANCELADA:'Cancelada', EM_ANDAMENTO:'Em andamento', FALTA:'Falta' }
+    return `<span class="badge ${map[status]||''}">${labels[status]||status}</span>`
+  }
+
+  const STATUS_COLORS = {
+    AGENDADA:'#f59e0b', CONFIRMADA:'#1E40AF', CONCLUIDA:'#1D9E75',
+    CANCELADA:'#ef4444', EM_ANDAMENTO:'#7c3aed', FALTA:'#9ca3af'
+  }
+
+  async function carregarStats() {
+    try {
+      const res = await fetch(`${API}/gestao/stats`)
+      if (!res.ok) throw new Error('Erro ao buscar dados')
+      statsData = await res.json()
+      renderStats()
+    } catch {
+      showToast('Não foi possível conectar ao servidor. Verifique se o backend está rodando.', 'error')
+      renderStatsMock()
+    }
+  }
+
+  function renderStats() {
+    const t = statsData.totais
+    document.getElementById('s-pacientes').textContent    = t.total_pacientes?.toLocaleString('pt-BR')    ?? '—'
+    document.getElementById('s-profissionais').textContent = t.total_profissionais?.toLocaleString('pt-BR') ?? '—'
+    document.getElementById('s-unidades').textContent     = t.total_unidades?.toLocaleString('pt-BR')     ?? '—'
+    document.getElementById('s-consultas').textContent    = t.total_consultas?.toLocaleString('pt-BR')    ?? '—'
+    document.getElementById('s-exames').textContent       = t.total_exames?.toLocaleString('pt-BR')       ?? '—'
+    document.getElementById('s-prontuarios').textContent  = t.total_prontuarios?.toLocaleString('pt-BR')  ?? '—'
+
+    // Status bars
+    const totalConsultas = statsData.por_status.reduce((a, s) => a + s.total, 0) || 1
+    document.getElementById('status-list').innerHTML = statsData.por_status.map(s => {
+      const pct = Math.round((s.total / totalConsultas) * 100)
+      const color = STATUS_COLORS[s.status] || '#9ca3af'
+      const label = { AGENDADA:'Agendada', CONFIRMADA:'Confirmada', CONCLUIDA:'Concluída', CANCELADA:'Cancelada', EM_ANDAMENTO:'Em andamento', FALTA:'Falta' }[s.status] || s.status
+      return `<div class="status-row">
+        <div class="status-row-top"><span>${label}</span><span style="color:var(--text-muted)">${s.total} (${pct}%)</span></div>
+        <div class="status-bar-bg"><div class="status-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      </div>`
+    }).join('') || '<div class="empty">Nenhum dado disponível</div>'
+
+    // Especialidades
+    const maxEsp = Math.max(...statsData.por_especialidade.map(e => e.total_consultas), 1)
+    document.getElementById('esp-list').innerHTML = statsData.por_especialidade.map(e => {
+      const pct = Math.round((e.total_consultas / maxEsp) * 100)
+      return `<div class="status-row">
+        <div class="status-row-top"><span>${e.especialidade}</span><span style="color:var(--text-muted)">${e.total_consultas}</span></div>
+        <div class="status-bar-bg"><div class="status-bar-fill" style="width:${pct}%;background:var(--blue)"></div></div>
+      </div>`
+    }).join('') || '<div class="empty">Nenhuma especialidade cadastrada</div>'
+
+    // Últimas consultas
+    document.getElementById('ultimas-consultas').innerHTML = statsData.ultimas_consultas.map(c => `<tr>
+      <td><strong>${fmt(c.data_hora)}</strong> ${fmtHora(c.data_hora)}</td>
+      <td>${c.paciente || '—'}</td>
+      <td class="td-muted">${c.profissional || '—'}</td>
+      <td class="td-muted">${c.unidade || '—'}</td>
+      <td>${badgeStatus(c.status)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="empty">Nenhuma consulta registrada</td></tr>'
+  }
+
+  function renderStatsMock() {
+    document.getElementById('s-pacientes').textContent = '—'
+    document.getElementById('s-profissionais').textContent = '—'
+    document.getElementById('s-unidades').textContent = '7'
+    document.getElementById('s-consultas').textContent = '—'
+    document.getElementById('s-exames').textContent = '—'
+    document.getElementById('s-prontuarios').textContent = '—'
+    document.getElementById('status-list').innerHTML = '<div class="empty">Backend indisponível</div>'
+    document.getElementById('esp-list').innerHTML = '<div class="empty">Backend indisponível</div>'
+    document.getElementById('ultimas-consultas').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">Backend indisponível</td></tr>'
+  }
+
+  function renderUnidades() {
+    if (!statsData) return
+    const rows = statsData.por_unidade
+    document.getElementById('unidades-count').textContent = `${rows.length} unidades`
+    document.getElementById('unidades-table').innerHTML = rows.map(u => `<tr>
+      <td><strong>${u.unidade}</strong></td>
+      <td>${badgeTipo(u.tipo)}</td>
+      <td class="td-muted">—</td>
+      <td class="td-muted">Recife</td>
+      <td class="td-muted">—</td>
+      <td><strong>${u.total_consultas}</strong></td>
+    </tr>`).join('') || '<tr><td colspan="6" class="empty">Nenhuma unidade encontrada</td></tr>'
+  }
+
+  function renderConsultasUnidade() {
+    if (!statsData) return
+    const rows = statsData.por_unidade
+    document.getElementById('consultas-unidade-table').innerHTML = rows.map(u => {
+      const taxa = u.total_consultas > 0 ? Math.round((u.canceladas / u.total_consultas) * 100) : 0
+      const taxaColor = taxa > 30 ? 'var(--red)' : taxa > 15 ? 'var(--yellow)' : 'var(--green)'
+      return `<tr>
+        <td><strong>${u.unidade}</strong></td>
+        <td>${badgeTipo(u.tipo)}</td>
+        <td>${u.total_consultas}</td>
+        <td style="color:var(--teal)">${u.concluidas}</td>
+        <td style="color:var(--red)">${u.canceladas}</td>
+        <td><span style="font-weight:600;color:${taxaColor}">${taxa}%</span></td>
+      </tr>`
+    }).join('') || '<tr><td colspan="6" class="empty">Nenhum dado disponível</td></tr>'
+  }
+
+  carregarStats()
+</script>
+</body>
+</html>

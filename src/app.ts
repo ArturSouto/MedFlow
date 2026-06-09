@@ -1,6 +1,8 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import { gestaoRoutes }          from './routes/gestao.routes'
+import { labRoutes }             from './routes/lab.routes'
 import { authRoutes }            from './routes/auth.routes'
 import { consultaRoutes }        from './routes/consulta.routes'
 import { exameRoutes }           from './routes/exame.routes'
@@ -24,6 +26,8 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', app: 'MedFlow API', timestamp: new Date().toISOString() })
 })
 
+app.use('/gestao',            gestaoRoutes)
+app.use('/lab',               labRoutes)
 app.use('/auth',              authRoutes)
 app.use('/auth/profissional', profissionalAuthRoutes)
 app.use('/usuarios',          usuarioRoutes)

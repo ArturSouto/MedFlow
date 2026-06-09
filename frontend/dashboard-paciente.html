@@ -120,6 +120,23 @@
   .notif-text { font-size: 13px; color: var(--text); line-height: 1.5; }
   .notif-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
+  /* SINO DE NOTIFICAÇÕES */
+  .bell-wrap { position: relative; }
+  .bell-btn { background: none; border: none; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: background .15s, color .15s; }
+  .bell-btn:hover { background: var(--bg); color: var(--text); }
+  .bell-badge { position: absolute; top: 4px; right: 4px; width: 17px; height: 17px; background: var(--red); color: #fff; font-size: 9px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-card); display: none; }
+  .notif-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 320px; background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 200; display: none; }
+  .notif-panel.open { display: block; }
+  .notif-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 12px; border-bottom: 1px solid var(--border); }
+  .notif-panel-title { font-size: 14px; font-weight: 600; }
+  .notif-panel-clear { font-size: 12px; color: var(--green); background: none; border: none; cursor: pointer; font-family: inherit; }
+  .notif-panel-clear:hover { text-decoration: underline; }
+  .notif-panel-body { padding: 4px 16px; max-height: 320px; overflow-y: auto; }
+  .notif-panel-empty { text-align: center; padding: 24px 0; font-size: 13px; color: var(--text-muted); }
+  .notif-panel-item { display: flex; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); cursor: default; }
+  .notif-panel-item:last-child { border-bottom: none; }
+  .notif-panel-item .notif-dot { margin-top: 5px; }
+
   /* TABLE */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; }
@@ -258,6 +275,21 @@
       <span class="topbar-title" id="topbar-title">Meu Painel</span>
     </div>
     <div class="topbar-actions">
+      <div class="bell-wrap" id="bell-wrap">
+        <button class="bell-btn" onclick="toggleNotifPanel()" title="Notificações" aria-label="Notificações">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <span class="bell-badge" id="bell-badge"></span>
+        <div class="notif-panel" id="notif-panel">
+          <div class="notif-panel-header">
+            <span class="notif-panel-title">Notificações</span>
+            <button class="notif-panel-clear" onclick="marcarTodasLidas()">Marcar como lidas</button>
+          </div>
+          <div class="notif-panel-body" id="notif-panel-list">
+            <div class="notif-panel-empty">Carregando...</div>
+          </div>
+        </div>
+      </div>
       <a href="agendar-consulta.html" class="btn-agendar">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nova Consulta
@@ -685,35 +717,68 @@ function buildNotificacoes(consultas, exames) {
       const d = new Date(c.data_hora)
       const diff = (d - hoje) / (1000*60*60*24)
       return diff > 0 && diff <= 3 && c.status !== 'CANCELADA'
-    }).forEach(c => notifs.push({ dot: 'yellow', text: `Consulta amanhã com ${c.profissional_nome||c.medico_nome||'médico'} às ${fmtHora(c.data_hora)}`, time: 'Lembrete' }))
+    }).forEach(c => notifs.push({ dot: 'yellow', text: `Consulta em breve com ${c.profissional_nome||c.medico_nome||'médico'} às ${fmtHora(c.data_hora)} (${fmt(c.data_hora)})`, time: 'Lembrete' }))
     if (exames) exames.filter(e => e.status === 'PRONTO').forEach(e => notifs.push({ dot: 'green', text: `Resultado do exame "${e.tipo}" está disponível`, time: 'Resultado pronto' }))
     consultas.filter(c => c.status === 'CONFIRMADA').forEach(c => notifs.push({ dot: 'blue', text: `Consulta com ${c.profissional_nome||'médico'} confirmada para ${fmt(c.data_hora)}`, time: 'Confirmação' }))
   }
-  if (notifs.length === 0) notifs.push({ dot: 'green', text: 'Bem-vindo ao MedFlow! Tudo em dia.', time: 'Agora' })
+  if (notifs.length === 0) notifs.push({ dot: 'green', text: 'Tudo em dia! Nenhuma pendência no momento.', time: 'Agora' })
   return notifs
 }
+
+function renderNotifPanel(notifs) {
+  const list = document.getElementById('notif-panel-list')
+  const card = document.getElementById('notif-list')
+  const html = notifs.map(n => `<div class="notif-panel-item">
+    <div class="notif-dot ${n.dot}"></div>
+    <div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div>
+  </div>`).join('')
+  list.innerHTML = html
+  if (card) card.innerHTML = notifs.map(n => `<div class="notif-item">
+    <div class="notif-dot ${n.dot}"></div>
+    <div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div>
+  </div>`).join('')
+
+  const unread = notifs.filter(n => n.dot !== 'green' || notifs.length > 1).length
+  const badge = document.getElementById('bell-badge')
+  if (unread > 0 && notifs[0].text !== 'Tudo em dia! Nenhuma pendência no momento.') {
+    badge.textContent = unread > 9 ? '9+' : unread
+    badge.style.display = 'flex'
+  } else {
+    badge.style.display = 'none'
+  }
+}
+
+function toggleNotifPanel() {
+  document.getElementById('notif-panel').classList.toggle('open')
+}
+
+function marcarTodasLidas() {
+  document.getElementById('bell-badge').style.display = 'none'
+  document.getElementById('notif-panel').classList.remove('open')
+}
+
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('bell-wrap')
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('notif-panel').classList.remove('open')
+  }
+})
 
 // INIT
 async function init() {
   await loadUsuario()
-  const [consultas, exames] = await Promise.allSettled([
+  const [consultasRes, examesRes] = await Promise.allSettled([
     api('/consultas').catch(()=>[]),
     api('/exames').catch(()=>[])
   ])
-  const c = consultas.value || []
-  const e = exames.value || []
+  const c = consultasRes.value || []
+  const e = examesRes.value || []
 
-  // Recarregar com dados
   await loadConsultas()
   await loadExames()
   loadPerfil()
 
-  // Notificações
-  const notifs = buildNotificacoes(c, e)
-  document.getElementById('notif-list').innerHTML = notifs.map(n => `<div class="notif-item">
-    <div class="notif-dot ${n.dot}"></div>
-    <div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div>
-  </div>`).join('')
+  renderNotifPanel(buildNotificacoes(c, e))
 }
 
 init()

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedFlow — Laboratório</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1E40AF; --blue-light: #EFF6FF; --blue-dark: #1e3a8a;
+    --green: #1D9E75; --green-light: #E1F5EE; --teal: #0F6E56;
+    --yellow: #f59e0b; --yellow-light: #fef9e7;
+    --red: #ef4444; --red-light: #fef2f2;
+    --purple: #7c3aed; --purple-light: #f5f3ff;
+    --orange: #f97316; --orange-light: #fff7ed;
+    --text: #1a1a1a; --text-muted: #6b7280; --text-light: #9ca3af;
+    --bg: #f8faff; --bg-card: #ffffff;
+    --border: rgba(0,0,0,0.07); --border-strong: rgba(0,0,0,0.12);
+    --radius: 16px; --radius-sm: 10px;
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04);
+    --sidebar-w: 220px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { width: var(--sidebar-w); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 20px 16px; border-bottom: 1px solid var(--border); text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); }
+  .logo-text span { color: var(--blue); }
+  .sidebar-nav { flex: 1; padding: 12px 10px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--text-muted); font-size: 14px; font-weight: 400; transition: background .15s, color .15s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 500; }
+  .nav-item.active svg { stroke: var(--blue); }
+  .nav-item svg { flex-shrink: 0; stroke: currentColor; }
+  .nav-badge { margin-left: auto; background: var(--blue); color: #fff; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 50px; min-width: 18px; text-align: center; }
+  .sidebar-user { border-top: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 36px; height: 36px; background: var(--blue-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--blue); flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--text-muted); }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+  .topbar-title { font-size: 16px; font-weight: 500; }
+  .topbar-badge { background: var(--blue-light); color: var(--blue); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 50px; }
+  .content { padding: 28px; flex: 1; }
+
+  /* PAGE */
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; }
+  .page-header h2 { font-size: 20px; font-weight: 600; }
+  .page-header p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* FILTERS */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .filter-btn { padding: 7px 16px; border-radius: 50px; font-size: 13px; font-weight: 500; border: 1.5px solid var(--border-strong); background: var(--bg-card); color: var(--text-muted); cursor: pointer; font-family: inherit; transition: all .15s; display: flex; align-items: center; gap: 6px; }
+  .filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .filter-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .filter-count { background: rgba(255,255,255,0.25); border-radius: 50px; padding: 1px 6px; font-size: 10px; }
+  .filter-btn:not(.active) .filter-count { background: var(--bg); color: var(--text-muted); }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 22px; }
+  .mini-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+  .mini-stat-value { font-size: 22px; font-weight: 700; }
+  .mini-stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* CARD */
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-card); overflow: hidden; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .card-title { font-size: 14px; font-weight: 600; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); padding: 10px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+  .td-muted { color: var(--text-muted); font-size: 12px; }
+
+  /* BADGE */
+  .badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 50px; white-space: nowrap; }
+  .b-agendado   { background: var(--yellow-light); color: #92400e; }
+  .b-coletado   { background: var(--blue-light);   color: var(--blue); }
+  .b-em_analise { background: var(--purple-light);  color: var(--purple); }
+  .b-pronto     { background: var(--green-light);   color: var(--teal); }
+  .b-cancelado  { background: var(--red-light);     color: var(--red); }
+
+  /* BUTTONS */
+  .btn-sm { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; border: 1.5px solid var(--border-strong); background: var(--bg-card); cursor: pointer; font-family: inherit; transition: all .15s; color: var(--text); }
+  .btn-sm:hover { border-color: var(--blue); color: var(--blue); }
+  .btn-sm.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .btn-sm.primary:hover { background: var(--blue-dark); }
+  .btn-sm.success { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-sm.success:hover { background: var(--teal); }
+  .btn-atualizar { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg-card); border-radius: var(--radius); width: 100%; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 6px; }
+  .modal-close:hover { color: var(--text); background: var(--bg); }
+  .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 13px; font-weight: 500; }
+  .form-group select,
+  .form-group textarea { width: 100%; border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 10px 12px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: border-color .2s; background: #fff; resize: vertical; }
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(30,64,175,0.1); }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--bg); border-radius: var(--radius-sm); padding: 14px; }
+  .info-item label { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 2px; }
+  .info-item span { font-size: 13px; font-weight: 500; }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+  .empty svg { margin-bottom: 12px; opacity: .4; }
+  .empty p { font-size: 14px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: #fff; padding: 12px 22px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 9999; opacity: 0; transition: opacity .25s, transform .25s; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #dc2626; }
+  .toast.success { background: var(--green); }
+
+  @media (max-width: 900px) {
+    .stats-row { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .content { padding: 16px; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .topbar { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="medflow.html" class="sidebar-logo">
+    <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="10" fill="#1E40AF"/>
+      <path d="M12 20h4l3-7 4 14 3-10 2 3h4" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="logo-text">Med<span>Flow</span></span>
+  </a>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="setPage('fila')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11M5 9h14M5 21h14a2 2 0 0 0 2-2v-4M5 21a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
+      Fila de exames
+      <span class="nav-badge" id="badge-pendentes" style="display:none"></span>
+    </button>
+    <button class="nav-item" onclick="setPage('todos')">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Todos os exames
+    </button>
+  </nav>
+  <div class="sidebar-user">
+    <div class="user-avatar">LAB</div>
+    <div class="user-info">
+      <div class="user-name">Laboratório</div>
+      <div class="user-role">Técnico responsável</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <span class="topbar-title" id="topbar-title">Fila de Exames</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="topbar-badge">Portal do Laboratório</span>
+      <button onclick="carregarExames(filtroAtivo)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--text-muted);font-family:inherit;display:flex;align-items:center;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Atualizar
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- FILA -->
+    <div class="page active" id="page-fila">
+      <div class="page-header">
+        <div><h2>Fila de Exames</h2><p>Exames pendentes de coleta, análise ou resultado</p></div>
+      </div>
+
+      <div class="stats-row">
+        <div class="mini-stat"><div class="mini-stat-value" id="cnt-agendado" style="color:var(--yellow)">—</div><div class="mini-stat-label">Aguardando coleta</div></div>
+        <div class="mini-stat"><div class="mini-stat-value" id="cnt-coletado" style="color:var(--blue)">—</div><div class="mini-stat-label">Coletados</div></div>
+        <div class="mini-stat"><div class="mini-stat-value" id="cnt-em_analise" style="color:var(--purple)">—</div><div class="mini-stat-label">Em análise</div></div>
+        <div class="mini-stat"><div class="mini-stat-value" id="cnt-pronto" style="color:var(--green)">—</div><div class="mini-stat-label">Prontos</div></div>
+        <div class="mini-stat"><div class="mini-stat-value" id="cnt-cancelado" style="color:var(--red)">—</div><div class="mini-stat-label">Cancelados</div></div>
+      </div>
+
+      <div class="filters">
+        <button class="filter-btn active" onclick="filtrar('todos')" id="f-todos">Todos <span class="filter-count" id="fc-todos">0</span></button>
+        <button class="filter-btn" onclick="filtrar('AGENDADO')" id="f-AGENDADO">Aguardando coleta <span class="filter-count" id="fc-AGENDADO">0</span></button>
+        <button class="filter-btn" onclick="filtrar('COLETADO')" id="f-COLETADO">Coletados <span class="filter-count" id="fc-COLETADO">0</span></button>
+        <button class="filter-btn" onclick="filtrar('EM_ANALISE')" id="f-EM_ANALISE">Em análise <span class="filter-count" id="fc-EM_ANALISE">0</span></button>
+        <button class="filter-btn" onclick="filtrar('PRONTO')" id="f-PRONTO">Prontos <span class="filter-count" id="fc-PRONTO">0</span></button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="tabela-titulo">Todos os exames</span>
+          <span id="tabela-count" style="font-size:12px;color:var(--text-muted)"></span>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Paciente</th>
+                <th>Tipo de exame</th>
+                <th>Unidade</th>
+                <th>Data agendada</th>
+                <th>Status</th>
+                <th>Ação rápida</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tabela-body">
+              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TODOS -->
+    <div class="page" id="page-todos">
+      <div class="page-header">
+        <div><h2>Todos os Exames</h2><p>Histórico completo de exames do sistema</p></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Histórico</span></div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Paciente</th><th>Tipo</th><th>Unidade</th><th>Data agendada</th><th>Data resultado</th><th>Status</th><th></th></tr></thead>
+            <tbody id="todos-body"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL ATUALIZAR -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Atualizar exame</span>
+      <button class="modal-close" onclick="fecharModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="info-grid" id="modal-info"></div>
+
+      <div class="form-group">
+        <label>Novo status</label>
+        <select id="modal-status">
+          <option value="AGENDADO">Aguardando coleta</option>
+          <option value="COLETADO">Coletado</option>
+          <option value="EM_ANALISE">Em análise</option>
+          <option value="PRONTO">Pronto (resultado disponível)</option>
+          <option value="CANCELADO">Cancelado</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="campo-resultado" style="display:none">
+        <label>Resultado</label>
+        <textarea id="modal-resultado" rows="3" placeholder="Descreva o resultado do exame..."></textarea>
+      </div>
+
+      <div class="form-group" id="campo-laudo" style="display:none">
+        <label>Laudo técnico</label>
+        <textarea id="modal-laudo" rows="4" placeholder="Laudo completo do exame (opcional)..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-sm success" onclick="salvarAtualizacao()" id="btn-salvar">Salvar atualização</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:3000'
+  let todosExames = []
+  let exameAtual = null
+  let filtroAtivo = 'todos'
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast')
+    t.textContent = msg; t.className = `toast show ${type}`
+    setTimeout(() => t.className = 'toast', 3000)
+  }
+
+  function fmt(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' }) }
+  function fmtHora(iso) { if (!iso) return ''; return new Date(iso).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) }
+
+  function badgeStatus(s) {
+    const map = {
+      AGENDADO:   ['b-agendado',   'Aguardando coleta'],
+      COLETADO:   ['b-coletado',   'Coletado'],
+      EM_ANALISE: ['b-em_analise', 'Em análise'],
+      PRONTO:     ['b-pronto',     'Pronto'],
+      CANCELADO:  ['b-cancelado',  'Cancelado'],
+    }
+    const [cls, label] = map[s] || ['b-agendado', s]
+    return `<span class="badge ${cls}">${label}</span>`
+  }
+
+  function proximoStatus(status) {
+    const fluxo = { AGENDADO: 'COLETADO', COLETADO: 'EM_ANALISE', EM_ANALISE: 'PRONTO' }
+    const labels = { COLETADO: 'Marcar coletado', EM_ANALISE: 'Iniciar análise', PRONTO: 'Registrar resultado' }
+    const proximo = fluxo[status]
+    if (!proximo) return ''
+    return `<button class="btn-sm btn-atualizar" onclick="avancarStatus('${arguments[1]}', '${proximo}')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      ${labels[proximo]}
+    </button>`
+  }
+
+  function setPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'))
+    document.getElementById('page-' + id).classList.add('active')
+    const btn = [...document.querySelectorAll('.nav-item')].find(b => b.getAttribute('onclick')?.includes(`'${id}'`))
+    if (btn) btn.classList.add('active')
+    const titles = { fila: 'Fila de Exames', todos: 'Todos os Exames' }
+    document.getElementById('topbar-title').textContent = titles[id] || 'Laboratório'
+    if (id === 'todos') renderTodos()
+  }
+
+  async function carregarExames() {
+    try {
+      const res = await fetch(`${API}/lab/exames`)
+      if (!res.ok) throw new Error()
+      todosExames = await res.json()
+      atualizarContadores()
+      renderTabela(filtroAtivo)
+    } catch {
+      showToast('Não foi possível conectar ao servidor.', 'error')
+      todosExames = []
+      atualizarContadores()
+      renderTabela(filtroAtivo)
+    }
+  }
+
+  function atualizarContadores() {
+    const cnt = { AGENDADO:0, COLETADO:0, EM_ANALISE:0, PRONTO:0, CANCELADO:0 }
+    todosExames.forEach(e => { if (cnt[e.status] !== undefined) cnt[e.status]++ })
+
+    Object.entries(cnt).forEach(([k, v]) => {
+      const el = document.getElementById('cnt-' + k.toLowerCase())
+      if (el) el.textContent = v
+      const fc = document.getElementById('fc-' + k)
+      if (fc) fc.textContent = v
+    })
+    document.getElementById('fc-todos').textContent = todosExames.length
+
+    const pendentes = cnt.AGENDADO + cnt.COLETADO + cnt.EM_ANALISE
+    const badge = document.getElementById('badge-pendentes')
+    badge.textContent = pendentes
+    badge.style.display = pendentes > 0 ? '' : 'none'
+  }
+
+  function filtrar(status) {
+    filtroAtivo = status
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+    const btn = document.getElementById('f-' + status)
+    if (btn) btn.classList.add('active')
+    renderTabela(status)
+  }
+
+  function renderTabela(filtro) {
+    const dados = filtro === 'todos' ? todosExames : todosExames.filter(e => e.status === filtro)
+    const labels = { todos:'Todos os exames', AGENDADO:'Aguardando coleta', COLETADO:'Coletados', EM_ANALISE:'Em análise', PRONTO:'Prontos', CANCELADO:'Cancelados' }
+    document.getElementById('tabela-titulo').textContent = labels[filtro] || filtro
+    document.getElementById('tabela-count').textContent = `${dados.length} exame${dados.length !== 1 ? 's' : ''}`
+
+    if (dados.length === 0) {
+      document.getElementById('tabela-body').innerHTML = `<tr><td colspan="7"><div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11M5 9h14"/></svg><p>Nenhum exame encontrado</p></div></td></tr>`
+      return
+    }
+
+    document.getElementById('tabela-body').innerHTML = dados.map(e => `<tr>
+      <td>
+        <div style="font-weight:500">${e.paciente_nome || '—'}</div>
+        <div class="td-muted">${e.paciente_cpf ? formatCPF(e.paciente_cpf) : ''}</div>
+      </td>
+      <td><strong>${e.tipo}</strong></td>
+      <td class="td-muted">${e.unidade_nome || '—'}</td>
+      <td class="td-muted">${fmt(e.data_agendada)}</td>
+      <td>${badgeStatus(e.status)}</td>
+      <td>${proximoStatus(e.status, e.id)}</td>
+      <td><button class="btn-sm" onclick="abrirModal('${e.id}')">Editar</button></td>
+    </tr>`).join('')
+  }
+
+  function renderTodos() {
+    if (todosExames.length === 0) {
+      document.getElementById('todos-body').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">Nenhum exame registrado</td></tr>`
+      return
+    }
+    document.getElementById('todos-body').innerHTML = todosExames.map(e => `<tr>
+      <td><strong>${e.paciente_nome || '—'}</strong><br><span class="td-muted">${e.paciente_cpf ? formatCPF(e.paciente_cpf) : ''}</span></td>
+      <td>${e.tipo}</td>
+      <td class="td-muted">${e.unidade_nome || '—'}</td>
+      <td class="td-muted">${fmt(e.data_agendada)}</td>
+      <td class="td-muted">${e.data_resultado ? fmt(e.data_resultado) : '—'}</td>
+      <td>${badgeStatus(e.status)}</td>
+      <td><button class="btn-sm" onclick="abrirModal('${e.id}')">Editar</button></td>
+    </tr>`).join('')
+  }
+
+  function formatCPF(cpf) {
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+  }
+
+  async function avancarStatus(id, novoStatus) {
+    try {
+      const res = await fetch(`${API}/lab/exames/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: novoStatus })
+      })
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message) }
+      showToast('Status atualizado com sucesso!', 'success')
+      await carregarExames()
+    } catch (e) {
+      showToast(e.message || 'Erro ao atualizar', 'error')
+    }
+  }
+
+  function abrirModal(id) {
+    exameAtual = todosExames.find(e => e.id === id)
+    if (!exameAtual) return
+
+    document.getElementById('modal-info').innerHTML = `
+      <div class="info-item"><label>Paciente</label><span>${exameAtual.paciente_nome || '—'}</span></div>
+      <div class="info-item"><label>Tipo de exame</label><span>${exameAtual.tipo}</span></div>
+      <div class="info-item"><label>Unidade</label><span>${exameAtual.unidade_nome || '—'}</span></div>
+      <div class="info-item"><label>Data agendada</label><span>${fmt(exameAtual.data_agendada)}</span></div>`
+
+    document.getElementById('modal-status').value = exameAtual.status
+    document.getElementById('modal-resultado').value = exameAtual.resultado || ''
+    document.getElementById('modal-laudo').value = exameAtual.laudo || ''
+    toggleCamposResultado(exameAtual.status)
+
+    document.getElementById('modal-overlay').classList.add('open')
+  }
+
+  document.getElementById('modal-status').addEventListener('change', function() {
+    toggleCamposResultado(this.value)
+  })
+
+  function toggleCamposResultado(status) {
+    const mostrar = ['EM_ANALISE', 'PRONTO'].includes(status)
+    document.getElementById('campo-resultado').style.display = mostrar ? '' : 'none'
+    document.getElementById('campo-laudo').style.display = mostrar ? '' : 'none'
+  }
+
+  function fecharModal() {
+    document.getElementById('modal-overlay').classList.remove('open')
+    exameAtual = null
+  }
+
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) fecharModal()
+  })
+
+  async function salvarAtualizacao() {
+    if (!exameAtual) return
+    const btn = document.getElementById('btn-salvar')
+    btn.disabled = true
+
+    const body = {
+      status: document.getElementById('modal-status').value,
+      resultado: document.getElementById('modal-resultado').value || undefined,
+      laudo: document.getElementById('modal-laudo').value || undefined,
+    }
+
+    try {
+      const res = await fetch(`${API}/lab/exames/${exameAtual.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message) }
+      showToast('Exame atualizado com sucesso!', 'success')
+      fecharModal()
+      await carregarExames()
+      if (document.getElementById('page-todos').classList.contains('active')) renderTodos()
+    } catch (e) {
+      showToast(e.message || 'Erro ao salvar', 'error')
+    } finally {
+      btn.disabled = false
+    }
+  }
+
+  carregarExames()
+</script>
+</body>
+</html>

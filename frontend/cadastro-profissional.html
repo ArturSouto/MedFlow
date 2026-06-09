@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedFlow — Cadastro Profissional</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1E40AF;
+    --blue-light: #EFF6FF;
+    --blue-mid: #93C5FD;
+    --blue-dark: #1e3a8a;
+    --text: #1a1a1a;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --bg: #ffffff;
+    --bg-soft: #f8faff;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+    --radius: 16px;
+    --radius-sm: 8px;
+    --shadow-card: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    --error: #ef4444;
+    --error-light: #fef2f2;
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg-soft); color: var(--text); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100vh; display: flex; flex-direction: column; }
+
+  nav { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 clamp(1.5rem, 5vw, 4rem); height: 64px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); letter-spacing: -0.3px; }
+  .logo-text span { color: var(--blue); }
+  .nav-badge { display: flex; align-items: center; gap: 6px; background: var(--blue-light); color: var(--blue); font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 50px; }
+  .nav-link { font-size: 14px; color: var(--text-muted); text-decoration: none; transition: color .2s; }
+  .nav-link:hover { color: var(--blue); }
+
+  main { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 2rem); }
+
+  .card { background: #fff; border-radius: 24px; box-shadow: var(--shadow-card); border: 1px solid var(--border); display: flex; width: 100%; max-width: 940px; overflow: hidden; min-height: 580px; }
+
+  /* Lado esquerdo */
+  .card-left { background: linear-gradient(145deg, var(--blue-dark) 0%, var(--blue) 60%, #3b82f6 100%); color: #fff; padding: clamp(2rem, 5vw, 3rem); display: flex; flex-direction: column; justify-content: space-between; width: 320px; flex-shrink: 0; }
+  .card-left-top h2 { font-family: 'DM Serif Display', serif; font-size: clamp(22px, 3vw, 28px); line-height: 1.2; margin-bottom: 10px; }
+  .card-left-top p { font-size: 14px; opacity: 0.85; line-height: 1.6; margin-bottom: 28px; }
+  .benefit-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .benefit { display: flex; align-items: center; gap: 10px; font-size: 14px; opacity: 0.9; }
+  .benefit-icon { width: 20px; height: 20px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .card-left-bottom { font-size: 12px; opacity: 0.5; }
+
+  /* Lado direito */
+  .card-right { flex: 1; padding: clamp(2rem, 5vw, 3rem); overflow-y: auto; }
+  .form-title { font-size: clamp(22px, 3vw, 28px); font-weight: 600; margin-bottom: 4px; }
+  .form-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+  .form-subtitle a { color: var(--blue); text-decoration: none; font-weight: 500; }
+  .form-subtitle a:hover { text-decoration: underline; }
+
+  .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 20px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-row.single { grid-template-columns: 1fr; }
+  .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 13px; font-weight: 500; color: var(--text); }
+  .form-group label span.optional { font-weight: 400; color: var(--text-light); font-size: 12px; margin-left: 4px; }
+
+  .input-wrap { position: relative; display: flex; align-items: center; }
+  .input-wrap svg { position: absolute; left: 13px; color: var(--text-light); pointer-events: none; flex-shrink: 0; }
+  .input-wrap input,
+  .input-wrap select { width: 100%; height: 46px; border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 0 14px 0 40px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); background: #fff; outline: none; transition: border-color .2s, box-shadow .2s; appearance: none; }
+  .input-wrap input:focus,
+  .input-wrap select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(30,64,175,0.1); }
+  .input-wrap input.error,
+  .input-wrap select.error { border-color: var(--error); background: var(--error-light); }
+  .input-wrap.select-wrap::after { content: ''; position: absolute; right: 13px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid var(--text-muted); pointer-events: none; }
+
+  .field-error { display: none; align-items: center; gap: 5px; font-size: 12px; color: var(--error); }
+  .field-error.visible { display: flex; }
+
+  .hint { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+  .terms-row { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; }
+  .terms-row input[type=checkbox] { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--blue); flex-shrink: 0; cursor: pointer; }
+  .terms-row label { font-size: 13px; color: var(--text-muted); line-height: 1.5; cursor: pointer; }
+  .terms-row label a { color: var(--blue); text-decoration: none; }
+  .terms-row label a:hover { text-decoration: underline; }
+
+  .btn-submit { width: 100%; height: 50px; background: var(--blue); color: #fff; border: none; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; transition: background .2s, transform .15s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; }
+  .btn-submit:hover:not(:disabled) { background: var(--blue-dark); transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+  .btn-submit.loading::after { content: ''; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Tela de sucesso */
+  #successScreen { display: none; text-align: center; padding: 40px 20px; }
+  #successScreen.visible { display: block; }
+  .success-icon { width: 72px; height: 72px; background: var(--blue-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .success-title { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+  .success-sub { font-size: 15px; color: var(--text-muted); margin-bottom: 28px; max-width: 360px; margin-left: auto; margin-right: auto; }
+  .btn-login { display: inline-flex; align-items: center; gap: 8px; background: var(--blue); color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 50px; font-size: 15px; font-weight: 500; transition: background .2s; }
+  .btn-login:hover { background: var(--blue-dark); }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: #fff; padding: 12px 22px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 9999; opacity: 0; transition: opacity .25s, transform .25s; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #dc2626; }
+  .toast.success { background: var(--green); }
+
+  @media (max-width: 700px) {
+    .card { flex-direction: column; }
+    .card-left { width: 100%; min-height: 0; padding: 24px; }
+    .card-left-top p, .benefit-list, .card-left-bottom { display: none; }
+    .form-row.triple { grid-template-columns: 1fr 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="medflow.html" class="logo">
+    <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="10" fill="#1E40AF"/>
+      <path d="M12 20h4l3-7 4 14 3-10 2 3h4" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="logo-text">Med<span>Flow</span></span>
+  </a>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span class="nav-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.99 12a19.8 19.8 0 0 1-3-8.57A2 2 0 0 1 3.92 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      Área Profissional
+    </span>
+    <a href="login-profissional.html" class="nav-link">Já tenho conta</a>
+  </div>
+</nav>
+
+<main>
+  <div class="card">
+
+    <!-- Lado esquerdo -->
+    <div class="card-left">
+      <div class="card-left-top">
+        <h2>Cadastro de Profissional de Saúde</h2>
+        <p>Acesse o sistema integrado do SUS municipal do Recife para gerenciar consultas, prontuários e indicadores clínicos.</p>
+        <ul class="benefit-list">
+          <li class="benefit">
+            <div class="benefit-icon"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 10.5L3 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            Agenda digital integrada
+          </li>
+          <li class="benefit">
+            <div class="benefit-icon"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 10.5L3 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            Prontuário eletrônico do paciente
+          </li>
+          <li class="benefit">
+            <div class="benefit-icon"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 10.5L3 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            Indicadores epidemiológicos em tempo real
+          </li>
+          <li class="benefit">
+            <div class="benefit-icon"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M13 4L6.5 10.5L3 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            100% integrado ao SUS Recife
+          </li>
+        </ul>
+      </div>
+      <div class="card-left-bottom">© 2026 MedFlow · Todos os direitos reservados</div>
+    </div>
+
+    <!-- Lado direito -->
+    <div class="card-right">
+
+      <div id="formSection">
+        <h1 class="form-title">Criar conta profissional</h1>
+        <p class="form-subtitle">Já tem conta? <a href="login-profissional.html">Entrar agora</a></p>
+
+        <form id="registerForm" novalidate>
+
+          <div class="section-label">Dados pessoais</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nome">Nome completo</label>
+              <div class="input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input type="text" id="nome" name="nome" placeholder="Dr(a). Nome Sobrenome" autocomplete="name">
+              </div>
+              <div class="field-error" id="nomeError">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Nome obrigatório (mínimo 3 caracteres)
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">E-mail profissional</label>
+              <div class="input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <input type="email" id="email" name="email" placeholder="profissional@saude.recife.pe.gov.br" autocomplete="email">
+              </div>
+              <div class="field-error" id="emailError">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                E-mail inválido
+              </div>
+            </div>
+          </div>
+
+          <div class="section-label">Identificação profissional</div>
+
+          <div class="form-row triple">
+            <div class="form-group">
+              <label for="cargo">Cargo / Função</label>
+              <div class="input-wrap select-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                <select id="cargo" name="cargo">
+                  <option value="Médico">Médico(a)</option>
+                  <option value="Enfermeiro">Enfermeiro(a)</option>
+                  <option value="Dentista">Dentista</option>
+                  <option value="Farmacêutico">Farmacêutico(a)</option>
+                  <option value="Fisioterapeuta">Fisioterapeuta</option>
+                  <option value="Psicólogo">Psicólogo(a)</option>
+                  <option value="Assistente Social">Assistente Social</option>
+                  <option value="Técnico de Enfermagem">Téc. de Enfermagem</option>
+                  <option value="Agente de Saúde">Agente de Saúde</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="especialidade">Especialidade <span class="optional">(opcional)</span></label>
+              <div class="input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <input type="text" id="especialidade" name="especialidade" placeholder="Ex: Cardiologia">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="crm">CRM <span class="optional">(opcional)</span></label>
+              <div class="input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <input type="text" id="crm" name="crm" placeholder="Ex: 12345-PE">
+              </div>
+              <span class="hint">Obrigatório para médicos</span>
+            </div>
+          </div>
+
+          <div class="form-row single" style="margin-top:4px">
+            <div class="form-group">
+              <label for="matricula">Matrícula funcional <span class="optional">(opcional)</span></label>
+              <div class="input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <input type="text" id="matricula" name="matricula" placeholder="Número de matrícula na Prefeitura do Recife">
+              </div>
+            </div>
+          </div>
+
+          <div class="section-label">Segurança</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="senha">Senha</label>
+              <div class="input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="senha" name="senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+              </div>
+              <div class="field-error" id="senhaError">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Senha deve ter pelo menos 8 caracteres
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmarSenha">Confirmar senha</label>
+              <div class="input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="confirmarSenha" name="confirmarSenha" placeholder="Repita a senha" autocomplete="new-password">
+              </div>
+              <div class="field-error" id="confirmarSenhaError">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                As senhas não coincidem
+              </div>
+            </div>
+          </div>
+
+          <div class="terms-row">
+            <input type="checkbox" id="termos" name="termos">
+            <label for="termos">
+              Declaro que sou profissional de saúde vinculado à rede municipal do Recife e concordo com os
+              <a href="#">Termos de Uso</a> e a <a href="#">Política de Privacidade</a> do MedFlow.
+            </label>
+          </div>
+          <div class="field-error" id="termosError" style="margin-top:6px">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5M8 11h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Você deve aceitar os termos para continuar
+          </div>
+
+          <button type="submit" class="btn-submit" id="submitBtn">
+            Criar conta profissional
+          </button>
+
+        </form>
+      </div>
+
+      <!-- Tela de sucesso -->
+      <div id="successScreen">
+        <div class="success-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 class="success-title">Cadastro realizado!</h2>
+        <p class="success-sub">Sua conta profissional foi criada com sucesso. Acesse o painel para gerenciar sua agenda e prontuários.</p>
+        <a href="login-profissional.html" class="btn-login">Ir para o login</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:3000'
+
+  function showError(id) { document.getElementById(id).classList.add('visible') }
+  function hideError(id) { document.getElementById(id).classList.remove('visible') }
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast')
+    t.textContent = msg; t.className = `toast show ${type}`
+    setTimeout(() => t.className = 'toast', 3500)
+  }
+
+  // Limpa erro ao digitar
+  ;['nome','email','cargo','crm','especialidade','matricula','senha','confirmarSenha'].forEach(id => {
+    const el = document.getElementById(id)
+    if (el) el.addEventListener('input', () => {
+      const errId = id.charAt(0).toUpperCase() + id.slice(1) + 'Error'
+      hideError(errId)
+      el.classList.remove('error')
+    })
+  })
+
+  document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault()
+
+    let valid = true
+    const errors = []
+
+    const nome         = document.getElementById('nome').value.trim()
+    const email        = document.getElementById('email').value.trim()
+    const cargo        = document.getElementById('cargo').value
+    const especialidade = document.getElementById('especialidade').value.trim()
+    const crm          = document.getElementById('crm').value.trim()
+    const matricula    = document.getElementById('matricula').value.trim()
+    const senha        = document.getElementById('senha').value
+    const confirmar    = document.getElementById('confirmarSenha').value
+    const termos       = document.getElementById('termos').checked
+
+    // Validações
+    if (nome.length < 3) {
+      showError('nomeError'); document.getElementById('nome').classList.add('error'); valid = false
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError('emailError'); document.getElementById('email').classList.add('error'); valid = false
+    }
+    if (senha.length < 8) {
+      showError('senhaError'); document.getElementById('senha').classList.add('error'); valid = false
+    }
+    if (senha !== confirmar) {
+      showError('confirmarSenhaError'); document.getElementById('confirmarSenha').classList.add('error'); valid = false
+    }
+    if (!termos) {
+      showError('termosError'); valid = false
+    }
+
+    if (!valid) return
+
+    const btn = document.getElementById('submitBtn')
+    btn.classList.add('loading')
+    btn.disabled = true
+    btn.textContent = ''
+
+    try {
+      const body = { nome, email, senha, cargo }
+      if (especialidade) body.especialidade = especialidade
+      if (crm) body.crm = crm.replace(/\s/g, '').toUpperCase()
+      if (matricula) body.matricula = matricula
+
+      const res = await fetch(`${API}/auth/profissional/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        if (data.token) {
+          localStorage.setItem('mf_prof_token', data.token)
+        }
+        document.getElementById('formSection').style.display = 'none'
+        document.getElementById('successScreen').classList.add('visible')
+      } else {
+        showToast(data.message || 'Erro ao criar conta. Tente novamente.', 'error')
+      }
+    } catch {
+      showToast('Não foi possível conectar ao servidor.', 'error')
+    } finally {
+      btn.classList.remove('loading')
+      btn.disabled = false
+      btn.textContent = 'Criar conta profissional'
+    }
+  })
+</script>
+</body>
+</html>
